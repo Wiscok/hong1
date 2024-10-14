@@ -1,0 +1,24 @@
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<canvas id="financialChart" width="400" height="200"></canvas><script>
+    var ctx = document.getElementById('financialChart').getContext('2d');
+    var financialChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Account Name'],  // X-axis labels
+            datasets: [{
+                label: 'Financial Data',
+                data: [/* Data from OpenDART API */],  // Financial data from the API response
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>

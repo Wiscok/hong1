@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>재무 정보 결과</title>
+</head>
+<body>
+    <h1>재무 정보 결과</h1>
+    <ul>
+        <!-- 가져온 재무 데이터를 리스트 형식으로 보여줌 -->
+        {% for item in financial_data %}
+        <li>{{ item }}</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

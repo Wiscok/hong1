@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>재무 정보 조회</title>
+</head>
+<body>
+    <h1>재무 정보 조회</h1>
+    <form method="post">
+        {% csrf_token %}  <!-- 보안 토큰 생성 -->
+        {{ form.as_p }}  <!-- 폼 필드를 HTML로 렌더링 -->
+        <button type="submit">조회하기</button>  <!-- 제출 버튼 -->
+    </form>
+</body>
+</html>
