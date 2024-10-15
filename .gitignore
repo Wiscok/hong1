@@ -1,0 +1,16 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.so
+
+# Virtual environment
+
+
+# Node modules
+node_modules/
+
+# React build files
+build/
+
+# Ignore zip files
+*.zip

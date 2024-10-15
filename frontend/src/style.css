@@ -1,0 +1,29 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap');
+.list {
+    list-style:none; 
+    padding: 1px; /* 전체 여백 */
+    justify-content: flex-start; /* 왼쪽 정렬 */
+    display: flex;
+    margin: 0;   
+    position: fixed;
+    top: 0; /* 상단에서 얼마나? */
+    white-space: nowrap; /* 텍스트 줄바꿈 방지 */
+  }
+  .list li {
+    flex: 1 1 calc(33% - 20px); /* 각 항목의 너비를 조정 (3열) */
+    flex: 0 1 auto;
+    margin: 10px; /* 항목 간 간격 설정 */
+    padding: 10px; /* 패딩 추가 */
+    background-color: #f0f1f5; /* 배경색 설정 */
+    border-radius : 10px;
+    /* border: 1px solid #e0e0e0; /* 경계선 추가 */
+    /* box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 그림자 추가 */
+    transition: transform 0.2s, box-shadow 0.2s; /* 호버 시 효과 추가 */
+    font-size: calc(2px + 2vmin);
+    font-family: "Noto Sans KR", sans-serif;
+  }
+  
+  .list li:hover {
+    transform: translateY(-4px); /* 호버 시 약간 위로 이동 */
+    box-shadow: 0 4px 8px rgba(78, 77, 77, 0.2); /* 호버 시 그림자 증가 */
+  }
