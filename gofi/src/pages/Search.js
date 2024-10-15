@@ -1,30 +1,25 @@
 import React, { useState } from 'react';
 import './Search.css'; 
+
 function FinancialDataForm() {
-  // 사용자가 입력한 데이터를 저장하는 상태 값
   const [corpCode, setCorpCode] = useState('');
   const [year, setYear] = useState('');
   const [report, setReport] = useState('');
   const [subject, setSubject] = useState('');
-  const [filteredData, setFilteredData] = useState([]); // 필터링된 데이터를 저장
-  const [error, setError] = useState(null); // 에러 상태 저장
+  const [filteredData, setFilteredData] = useState([]); 
+  const [error, setError] = useState(null); 
 
-  // 입력 필드가 변경될 때 상태를 업데이트하는 함수
   const handleInputChange = (e, setter) => {
     setter(e.target.value);
   };
 
-  // 폼 제출 시 호출되는 함수
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // URL에 파라미터로 데이터를 포함해서 GET 요청 보내기
     const query = `corp_code=${corpCode}&bsns_year=${year}&reprt_code=${report}&subject=${subject}`;
     
     try {
-        // API endpoint 수정
         const response = await fetch(`http://localhost:8000/open-dart/get-financial-data/?${query}`, { 
-            method: 'GET', 
+            method: 'GET',
         });
 
         if (response.ok) {
@@ -32,25 +27,26 @@ function FinancialDataForm() {
             setFilteredData(data);
             setError(null);
         } else {
-            // 응답 상태에 따라 구체적인 에러 메시지 설정
             if (response.status === 404) {
-                throw new Error('정보를 찾을 수 없습니다.'); // 404 에러에 대한 메시지
+                throw new Error('정보를 찾을 수 없습니다.');
             } else {
-                throw new Error('서버 오류가 발생했습니다.'); // 다른 오류에 대한 메시지
+                throw new Error('서버 오류가 발생했습니다.');
             }
         }
     } catch (error) {
         setError(error.message);
         setFilteredData([]);
     }
-};
+  };
 
+  // fs_nm (재무제표 종류)에 따라 데이터를 필터링
+  const consolidatedData = filteredData.filter(item => item.fs_nm === '연결재무제표');
+  const separateData = filteredData.filter(item => item.fs_nm === '재무제표');
 
   return (
     <div className="container">
       <h1>원하는 재무정보를 검색해보세요!</h1>
       <form onSubmit={handleSubmit}>
-        {/* 사용자 입력 폼 */}
         <input 
           type="text" 
           placeholder="회사코드 입력" 
@@ -79,20 +75,19 @@ function FinancialDataForm() {
           onChange={(e) => handleInputChange(e, setSubject)} 
           required 
         />
-        <button type="submit">데이터 조회</button>  {/* 버튼 클릭 시 API 요청 */}
+        <button type="submit">데이터 조회</button>
       </form>
 
-      {/* 에러 메시지 출력 */}
       {error && <p style={{ color: 'red' }}>Error: {error}</p>}
 
-      {/* 필터링된 데이터 출력 */}
-      {filteredData.length > 0 && (
+      {/* 연결재무제표 결과 출력 */}
+      {consolidatedData.length > 0 && (
         <div>
-          <h2>Filtered Data:</h2>
+          <h2>연결재무제표 결과:</h2>
           <ul>
-            {filteredData.map((item, index) => (
+            {consolidatedData.map((item, index) => (
               <li key={index}>
-                <strong>기업명:</strong> {item.corp_name} <br />
+                <strong>기업코드:</strong> {item.corp_code} <br />
                 <strong>사업연도:</strong> {item.bsns_year} <br />
                 <strong>계정과목:</strong> {item.account_nm} <br />
                 <strong>결과값:</strong> {item.thstrm_amount}
@@ -102,7 +97,23 @@ function FinancialDataForm() {
         </div>
       )}
 
-      {/* 필터링된 데이터가 없을 경우 */}
+      {/* 단일재무제표 결과 출력 */}
+      {separateData.length > 0 && (
+        <div>
+          <h2>단일재무제표 결과:</h2>
+          <ul>
+            {separateData.map((item, index) => (
+              <li key={index}>
+                <strong>기업코드:</strong> {item.corp_code} <br />
+                <strong>사업연도:</strong> {item.bsns_year} <br />
+                <strong>계정과목:</strong> {item.account_nm} <br />
+                <strong>{item.account_nm}:</strong> {item.thstrm_amount}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {filteredData.length === 0 && !error && <p>No data found for the selected account.</p>}
     </div>
   );
