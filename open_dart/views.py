@@ -26,10 +26,11 @@ def get_financial_data(request):
         'bsns_year': bsns_year,
         'reprt_code': reprt_code,
     })
-
+    
+    # print("API 응답 데이터:", response.json()) 디버그용
     # API로부터 받은 JSON 응답
     data = response.json()
-    print(data)  # 응답을 확인하기 위한 디버그 출력
+    # print(data)  # 응답을 확인하기 위한 디버그 출력
 
     # 'list' 키가 있는지 확인하고, 없으면 빈 리스트 반환
     if 'list' in data:
