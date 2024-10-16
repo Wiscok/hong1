@@ -87,10 +87,10 @@ function FinancialDataForm() {
           <ul>
             {consolidatedData.map((item, index) => (
               <li key={index}>
+                <strong>기업명:</strong> {item.corp_name} <br />
                 <strong>기업코드:</strong> {item.corp_code} <br />
                 <strong>사업연도:</strong> {item.bsns_year} <br />
-                <strong>계정과목:</strong> {item.account_nm} <br />
-                <strong>결과값:</strong> {item.thstrm_amount}
+                <strong>{item.account_nm}:</strong> {item.thstrm_amount}
               </li>
             ))}
           </ul>
@@ -104,9 +104,9 @@ function FinancialDataForm() {
           <ul>
             {separateData.map((item, index) => (
               <li key={index}>
+                <strong>기업명:</strong> {item.corp_name} <br />
                 <strong>기업코드:</strong> {item.corp_code} <br />
                 <strong>사업연도:</strong> {item.bsns_year} <br />
-                <strong>계정과목:</strong> {item.account_nm} <br />
                 <strong>{item.account_nm}:</strong> {item.thstrm_amount}
               </li>
             ))}
