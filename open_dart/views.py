@@ -4,6 +4,7 @@ from .models import  FinancialData
 from .forms import FinancialForm
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+import xml.etree.ElementTree as ET  # Ensure this line is added to import ElementTree
 
 # 재무 데이터 요청을 위한 폼을 렌더링하는 함수
 def financial_data_form(request):
@@ -38,9 +39,33 @@ def get_financial_data(request):
     else:
         filtered_data = []
         
+     # XML 파일에서 corp_code에 맞는 corp_name을 찾기
+    corp_name = get_corp_name_from_xml(corp_code)
+    
+    # corp_name을 결과에 추가
+    for item in filtered_data:
+        item['corp_name'] = corp_name
         
 
     return Response(filtered_data)
+
+def get_corp_name_from_xml(corp_code):
+    # XML 파일 경로
+    xml_file = 'C:/Users/defaf/dviz_proj/open_dart/data/CORPCODE.xml'
+    
+    # XML 파일 파싱
+    tree = ET.parse(xml_file)
+    root = tree.getroot()
+    
+    # corp_code에 해당하는 corp_name을 찾기
+    for list_item in root.findall('list'):
+        code = list_item.find('corp_code').text
+        name = list_item.find('corp_name').text
+        if code == corp_code:
+            return name
+    
+    # 일치하는 corp_code가 없으면 None 반환
+    return None
 
 # 웹 페이지에 사용자 입력을 처리하는 뷰
 def financial_view(request):
