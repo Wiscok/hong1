@@ -114,7 +114,7 @@ function FinancialDataForm() {
         </div>
       )}
 
-      {filteredData.length === 0 && !error && <p>No data found for the selected account.</p>}
+    {filteredData.length === 0 && !error && <p>해당 계정과목의 데이터가 존재하지않습니다.</p>}
     </div>
   );
 }

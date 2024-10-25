@@ -1,3 +1,4 @@
+import os
 import requests
 from django.shortcuts import render
 from .models import  FinancialData
@@ -5,6 +6,8 @@ from .forms import FinancialForm
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 import xml.etree.ElementTree as ET  # Ensure this line is added to import ElementTree
+from django.conf import settings  # Import settings to access BASE_DIR
+
 
 # 재무 데이터 요청을 위한 폼을 렌더링하는 함수
 def financial_data_form(request):
@@ -19,10 +22,10 @@ def get_financial_data(request):
     bsns_year = request.GET.get('bsns_year')
     reprt_code = request.GET.get('reprt_code')
     subject = request.GET.get('subject')
-    api_key = '403d95f352644da46fb0ef81577d235aca401eeb'
+    api_key = '403d95f352644da46fb0ef81577d235aca401eeb' # api key입력
     # OpenDART API 호출
     response = requests.get('https://opendart.fss.or.kr/api/fnlttSinglAcnt.json', params={
-        'crtfc_key': api_key,  # 여기에 본인의 API 키를 입력
+        'crtfc_key': api_key, 
         'corp_code': corp_code,
         'bsns_year': bsns_year,
         'reprt_code': reprt_code,
@@ -31,7 +34,6 @@ def get_financial_data(request):
     # print("API 응답 데이터:", response.json()) 디버그용
     # API로부터 받은 JSON 응답
     data = response.json()
-    # print(data)  # 응답을 확인하기 위한 디버그 출력
 # 
     # 'list' 키가 있는지 확인하고, 없으면 빈 리스트 반환
     if 'list' in data:
@@ -50,9 +52,11 @@ def get_financial_data(request):
     return Response(filtered_data)
 
 def get_corp_name_from_xml(corp_code):
-    # XML 파일 경로
-    xml_file = 'C:/Users/defaf/dviz_proj/open_dart/data/CORPCODE.xml'
-    
+    # # XML 파일 절대경로
+    # xml_file = 'C:/Users/defaf/dviz_proj/open_dart/data/CORPCODE.xml'
+     # Construct the relative path to the XML file using BASE_DIR
+    xml_file = os.path.join(settings.BASE_DIR, 'open_dart', 'data', 'CORPCODE.xml')
+
     # XML 파일 파싱
     tree = ET.parse(xml_file)
     root = tree.getroot()
