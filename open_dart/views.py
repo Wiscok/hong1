@@ -6,7 +6,7 @@ from .forms import FinancialForm
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 import xml.etree.ElementTree as ET  # Ensure this line is added to import ElementTree
-from django.conf import settings  # Import settings to access BASE_DIR
+from django.conf import settings  #  BASE_DIR설정에 필요
 
 
 # 재무 데이터 요청을 위한 폼을 렌더링하는 함수
@@ -16,7 +16,7 @@ def financial_data_form(request):
 
 # OpenDART API에서 데이터를 가져오는 함수
 @api_view(['GET'])
-def get_financial_data(request):
+def get_main_account_data(request):
     # 사용자로부터 입력 받은 파라미터들
     corp_code = request.GET.get('corp_code')
     bsns_year = request.GET.get('bsns_year')
@@ -51,6 +51,33 @@ def get_financial_data(request):
 
     return Response(filtered_data)
 
+@api_view(['GET'])
+def get_all_account_data(request):
+    corp_code = request.GET.get('corp_code')
+    bsns_year = request.GET.get('bsns_year')
+    reprt_code = request.GET.get('reprt_code')
+    fs_div = request.GET.get('fs_div')
+
+    api_key = '403d95f352644da46fb0ef81577d235aca401eeb'
+    
+    # OpenDART API 호출 (전체 계정 과목 API)
+    response = requests.get('https://opendart.fss.or.kr/api/fnlttSinglAcntAll.json', params={
+        'crtfc_key': api_key,
+        'corp_code': corp_code,
+        'bsns_year': bsns_year,
+        'reprt_code': reprt_code,
+        'fs_div': fs_div,
+    })
+    
+    data = response.json()
+    all_account_data = data.get('list', [])
+    
+    corp_name = get_corp_name_from_xml(corp_code)
+    for item in all_account_data:
+        item['corp_name'] = corp_name
+
+    return Response(all_account_data)
+
 def get_corp_name_from_xml(corp_code):
     # # XML 파일 절대경로
     # xml_file = 'C:/Users/defaf/dviz_proj/open_dart/data/CORPCODE.xml'
@@ -72,20 +99,20 @@ def get_corp_name_from_xml(corp_code):
     return None
 
 # 웹 페이지에 사용자 입력을 처리하는 뷰
-def financial_view(request):
-    if request.method == 'POST':
-        form = FinancialForm(request.POST)  # 사용자가 입력한 데이터를 폼에 전달
-        if form.is_valid():  # 폼이 유효한지 확인
-            corp_code = form.cleaned_data['corp_code']  # 유효한 회사 코드
-            year = form.cleaned_data['year']  # 유효한 연도
-            account_name = form.cleaned_data['account_name']  # 유효한 계정 이름
+# def financial_view(request):
+#     if request.method == 'POST':
+#         form = FinancialForm(request.POST)  # 사용자가 입력한 데이터를 폼에 전달
+#         if form.is_valid():  # 폼이 유효한지 확인
+#             corp_code = form.cleaned_data['corp_code']  # 유효한 회사 코드
+#             year = form.cleaned_data['year']  # 유효한 연도
+#             account_name = form.cleaned_data['account_name']  # 유효한 계정 이름
 
-            # OpenDART API를 통해 재무 데이터를 가져오는 로직 호출
-            financial_data = get_financial_data(corp_code, year, account_name)
+#             # OpenDART API를 통해 재무 데이터를 가져오는 로직 호출
+#             financial_data = get_financial_data(corp_code, year, account_name)
             
-            # 텍스트로 데이터를 보여주는 템플릿으로 렌더링
-            return render(request, 'financial_result.html', {'financial_data': financial_data})
+#             # 텍스트로 데이터를 보여주는 템플릿으로 렌더링
+#             return render(request, 'financial_result.html', {'financial_data': financial_data})
 
-    else:
-        form = FinancialForm()  # GET 요청일 경우 빈 폼을 보여줌
-    return render(request, 'financial_form.html', {'form': form})  # 폼을 템플릿에 렌더링
+#     else:
+#         form = FinancialForm()  # GET 요청일 경우 빈 폼을 보여줌
+#     return render(request, 'financial_form.html', {'form': form})  # 폼을 템플릿에 렌더링
