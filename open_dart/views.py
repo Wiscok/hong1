@@ -1,118 +1,122 @@
 import os
 import requests
+import json
 from django.shortcuts import render
-from .models import  FinancialData
-from .forms import FinancialForm
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-import xml.etree.ElementTree as ET  # Ensure this line is added to import ElementTree
-from django.conf import settings  #  BASE_DIR설정에 필요
+import xml.etree.ElementTree as ET
+from django.conf import settings
+from dotenv import load_dotenv
 
+# .env 파일 로드
+load_dotenv()
+
+# JSON 파일 경로
+MAPPING_FILE_PATH = os.path.join(settings.BASE_DIR, 'open_dart', 'data','account_mapping.json')
+
+# 맵핑 파일 로드 함수
+def load_account_mapping():
+    with open(MAPPING_FILE_PATH, 'r', encoding='utf-8') as file:
+        return json.load(file)
 
 # 재무 데이터 요청을 위한 폼을 렌더링하는 함수
 def financial_data_form(request):
-    return render(request, 'financial_data_form.html')  # 해당 HTML 템플릿을 렌더링
-
+    return render(request, 'financial_data_form.html')
 
 # OpenDART API에서 데이터를 가져오는 함수
 @api_view(['GET'])
-def get_main_account_data(request):
-    # 사용자로부터 입력 받은 파라미터들
-    corp_code = request.GET.get('corp_code')
-    bsns_year = request.GET.get('bsns_year')
-    reprt_code = request.GET.get('reprt_code')
-    subject = request.GET.get('subject')
-    api_key = '403d95f352644da46fb0ef81577d235aca401eeb' # api key입력
-    # OpenDART API 호출
-    response = requests.get('https://opendart.fss.or.kr/api/fnlttSinglAcnt.json', params={
-        'crtfc_key': api_key, 
-        'corp_code': corp_code,
-        'bsns_year': bsns_year,
-        'reprt_code': reprt_code,
-    })
-    
-    # print("API 응답 데이터:", response.json()) 디버그용
-    # API로부터 받은 JSON 응답
-    data = response.json()
-# 
-    # 'list' 키가 있는지 확인하고, 없으면 빈 리스트 반환
-    if 'list' in data:
-        filtered_data = [item for item in data['list'] if item['account_nm'] == subject]
-    else:
-        filtered_data = []
-        
-     # XML 파일에서 corp_code에 맞는 corp_name을 찾기
-    corp_name = get_corp_name_from_xml(corp_code)
-    
-    # corp_name을 결과에 추가
-    for item in filtered_data:
-        item['corp_name'] = corp_name
-        
-
-    return Response(filtered_data)
-
-@api_view(['GET'])
 def get_all_account_data(request):
+    # 요청 파라미터 가져오기
     corp_code = request.GET.get('corp_code')
-    bsns_year = request.GET.get('bsns_year')
+    year_range = request.GET.get('year')
     reprt_code = request.GET.get('reprt_code')
     fs_div = request.GET.get('fs_div')
+    subject = request.GET.get('subject')
 
-    api_key = '403d95f352644da46fb0ef81577d235aca401eeb'
-    
-    # OpenDART API 호출 (전체 계정 과목 API)
-    response = requests.get('https://opendart.fss.or.kr/api/fnlttSinglAcntAll.json', params={
-        'crtfc_key': api_key,
-        'corp_code': corp_code,
-        'bsns_year': bsns_year,
-        'reprt_code': reprt_code,
-        'fs_div': fs_div,
-    })
-    
-    data = response.json()
-    all_account_data = data.get('list', [])
-    
-    corp_name = get_corp_name_from_xml(corp_code)
-    for item in all_account_data:
-        item['corp_name'] = corp_name
+    # OpenDART API 키 및 URL
+    api_key = os.getenv('API_KEY')
+    url = 'https://opendart.fss.or.kr/api/fnlttSinglAcntAll.json'
 
-    return Response(all_account_data)
+    # 연도 범위 처리
+    years = []
+    if year_range:
+        if '~' in year_range:
+            start_year, end_year = map(int, year_range.split('~'))
+            years = [str(year) for year in range(start_year, end_year + 1)]
+        else:
+            years = [y.strip() for y in year_range.split(',') if y.strip()]
+
+    # 맵핑 사전 로드 및 해당 subject의 동의어 목록 가져오기
+    account_mapping = load_account_mapping()
+    synonyms = account_mapping.get(subject, [subject])  # 동의어가 없을 경우 입력된 subject 자체를 사용
+
+    # 동의어가 있는지 여부를 터미널에 출력
+    if subject in account_mapping:
+        print(f"'{subject}'에 대한 동의어 목록을 찾았습니다: {synonyms}")
+    else:
+        print(f"'{subject}'에 대한 동의어가 없어 기본값으로 검색합니다.")
+
+    all_filtered_data = []
+
+    for year in years:
+        # API 요청
+        response = requests.get(url, params={
+            'crtfc_key': api_key,
+            'corp_code': corp_code,
+            'bsns_year': year,
+            'reprt_code': reprt_code,
+            'fs_div': fs_div,
+        })
+        print(f"연도: {year}, 회사 코드: {corp_code}, 응답 상태 코드: {response.status_code}")
+
+        if response.ok:
+            data = response.json()
+            all_account_data = data.get('list', [])
+            corp_name = get_corp_name_from_xml(corp_code)
+
+            # 1. 정확히 일치하는 계정명이 있는 경우 먼저 필터링
+            exact_match_data = [
+                {
+                    'account_nm': item.get('account_nm'),
+                    'bsns_year': item.get('bsns_year'),
+                    'thstrm_amount': item.get('thstrm_amount'),
+                    'corp_name': corp_name
+                }
+                for item in all_account_data
+                if item.get('account_nm') == subject
+            ]
+
+            if exact_match_data:
+                all_filtered_data.extend(exact_match_data)
+                continue  # 다음 연도로 넘어감
+
+            # 2. 동의어 목록에 있는 키워드가 포함된 경우 필터링
+            filtered_data = [
+                {
+                    'account_nm': item.get('account_nm'),
+                    'bsns_year': item.get('bsns_year'),
+                    'thstrm_amount': item.get('thstrm_amount'),
+                    'corp_name': corp_name
+                }
+                for item in all_account_data
+                if any(keyword in item.get('account_nm', '') for keyword in synonyms)
+            ]
+
+            all_filtered_data.extend(filtered_data)
+        else:
+            return Response({"error": f"년도 {year}에 대한 데이터 조회 오류"}, status=response.status_code)
+
+    return Response(all_filtered_data)
 
 def get_corp_name_from_xml(corp_code):
-    # # XML 파일 절대경로
-    # xml_file = 'C:/Users/defaf/dviz_proj/open_dart/data/CORPCODE.xml'
-     # Construct the relative path to the XML file using BASE_DIR
     xml_file = os.path.join(settings.BASE_DIR, 'open_dart', 'data', 'CORPCODE.xml')
-
-    # XML 파일 파싱
     tree = ET.parse(xml_file)
     root = tree.getroot()
-    
-    # corp_code에 해당하는 corp_name을 찾기
+
     for list_item in root.findall('list'):
         code = list_item.find('corp_code').text
         name = list_item.find('corp_name').text
         if code == corp_code:
             return name
-    
-    # 일치하는 corp_code가 없으면 None 반환
+
     return None
-
-# 웹 페이지에 사용자 입력을 처리하는 뷰
-# def financial_view(request):
-#     if request.method == 'POST':
-#         form = FinancialForm(request.POST)  # 사용자가 입력한 데이터를 폼에 전달
-#         if form.is_valid():  # 폼이 유효한지 확인
-#             corp_code = form.cleaned_data['corp_code']  # 유효한 회사 코드
-#             year = form.cleaned_data['year']  # 유효한 연도
-#             account_name = form.cleaned_data['account_name']  # 유효한 계정 이름
-
-#             # OpenDART API를 통해 재무 데이터를 가져오는 로직 호출
-#             financial_data = get_financial_data(corp_code, year, account_name)
-            
-#             # 텍스트로 데이터를 보여주는 템플릿으로 렌더링
-#             return render(request, 'financial_result.html', {'financial_data': financial_data})
-
-#     else:
-#         form = FinancialForm()  # GET 요청일 경우 빈 폼을 보여줌
-#     return render(request, 'financial_form.html', {'form': form})  # 폼을 템플릿에 렌더링
