@@ -14,7 +14,7 @@
 }
 
 .App-header {
-  background-color: #f0f1f5; /* 바탕화면 색깔*/
+  background-color: #ffffff; /* 바탕화면 색깔*/
   min-height: 110vh; /*글씨가 위에서 얼마나 떨어져있는지*/
   letter-spacing: -3px; /* 글씨간의 간격 조절 */
   line-height: 50px; /* 줄 간격을 줄이는 경우 */

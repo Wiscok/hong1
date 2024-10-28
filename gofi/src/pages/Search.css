@@ -1,75 +1,168 @@
-  
-  /* 중앙 정렬된 컨테이너 */
-  .container {
-    max-width: 400px; /* 최대 너비 설정 */
-    margin: auto; /* 중앙 정렬 */
-    padding: 20px; /* 안쪽 여백 */
-    background-color: white; /* 흰색 배경 */
-    border-radius: 12px; /* 모서리 둥글게 */
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); /* 부드러운 그림자 효과 */
-  }
-  
-  /* 서브 타이틀 스타일 */
-  .subtitle {
-    text-align: center; /* 중앙 정렬 */
-    color: #666; /* 연한 회색 텍스트 */
-    font-size: 16px; /* 서브 타이틀 크기 */
-    margin-bottom: 20px; /* 하단 여백 */
-  }
-  
-  /* 폼 스타일 */
-  form {
-    display: flex; /* 플렉스 박스 사용 */
-    flex-direction: column; /* 세로 방향으로 정렬 */
-    align-items: center; /* 아이템 중앙 정렬 */
-  }
-  
-  /* 입력 필드 스타일 */
-  input {
-    width: 80%; /* 너비를 줄여서 중앙에 배치 */
-    max-width: 300px; /* 최대 너비 설정 */
-    margin: 8px 0; /* 상하 여백 */
-    padding: 8px; /* 안쪽 여백 */
-    border: 1px solid #d1d5db; /* 연한 회색 테두리 */
-    border-radius: 6px; /* 모서리 둥글게 */
-    font-size: 14px; /* 텍스트 크기 조정 */
-    transition: border-color 0.3s; /* 테두리 색상 전환 효과 */
-  }
-  
-  /* 입력 필드 포커스 시 스타일 */
-  input:focus {
-    border-color: #3b82f6; /* 파란색으로 변경 */
-    outline: none; /* 기본 테두리 제거 */
-  }
-  
-  /* 버튼 스타일 */
-  button {
-    width: 80%; /* 너비를 줄여서 중앙에 배치 */
-    max-width: 300px; /* 최대 너비 설정 */
-    padding: 8px; /* 안쪽 여백 */
-    background-color: #3b82f6; /* 파란색 배경 */
-    color: white; /* 흰색 텍스트 */
-    border: none; /* 테두리 제거 */
-    border-radius: 6px; /* 모서리 둥글게 */
-    font-size: 14px; /* 텍스트 크기 조정 */
-    cursor: pointer; /* 포인터 커서 */
-    transition: background-color 0.3s; /* 배경색 전환 효과 */
-  }
-  
-  /* 버튼 호버 효과 */
-  button:hover {
-    background-color: #2563eb; /* 어두운 파란색으로 변경 */
-  }
-  
-  /* 에러 메시지 스타일 */
-  p {
-    color: red; /* 빨간색 텍스트 */
-    text-align: center; /* 중앙 정렬 */
-  }
-  
-  /* 로딩 메시지 스타일 */
-  .loading {
-    font-weight: bold; /* 굵은 글씨 */
-    text-align: center; /* 중앙 정렬 */
-    color: #333; /* 진한 회색 */
-  }
+/* 중앙 정렬된 컨테이너 */
+.container {
+  max-width: 500px; /* 최대 너비 설정 */
+  margin: auto; /* 중앙 정렬 */
+  padding: 20px; /* 안쪽 여백 */
+  background-color: white; /* 흰색 배경 */
+  border-radius: 12px; /* 모서리 둥글게 */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); /* 부드러운 그림자 효과 */
+}
+
+/* 서브 타이틀 스타일 */
+.subtitle {
+  text-align: center; /* 중앙 정렬 */
+  color: #ffffff; /* 연한 회색 텍스트 */
+  font-size: px; /* 서브 타이틀 크기 */
+  margin-bottom: 20px; /* 하단 여백 */
+}
+
+/* 폼 스타일 */
+form {
+  display: flex; /* 플렉스 박스 사용 */
+  flex-direction: column; /* 세로 방향으로 정렬 */
+  align-items: center; /* 아이템 중앙 정렬 */
+}
+
+/* 입력 필드 스타일 */
+input {
+  width: 100%; /* 너비를 줄여서 중앙에 배치 */
+  max-width: 300px; /* 최대 너비 설정 */
+  margin: 5px 0; /* 상하 여백 */
+  padding: 8px; /* 안쪽 여백 */
+  border: 1px solid #d1d5db; /* 연한 회색 테두리 */
+  border-radius: 6px; /* 모서리 둥글게 */
+  font-size: 14px; /* 텍스트 크기 조정 */
+  transition: border-color 0.3s; /* 테두리 색상 전환 효과 */
+}
+
+/* 입력 필드 포커스 시 스타일 */
+input:focus {
+  border-color: #3b82f6; /* 파란색으로 변경 */
+  outline: none; /* 기본 테두리 제거 */
+}
+
+/* 드롭다운 스타일 */
+select {
+  width: 80%; /* 너비를 줄여서 중앙에 배치 */
+  max-width: 300px; /* 최대 너비 설정 */
+  margin: 8px 0; /* 상하 여백 */
+  padding: 8px; /* 안쪽 여백 */
+  border: 1px solid #d1d5db; /* 연한 회색 테두리 */
+  border-radius: 6px; /* 모서리 둥글게 */
+  font-size: 14px; /* 텍스트 크기 조정 */
+  transition: border-color 0.3s; /* 테두리 색상 전환 효과 */
+}
+
+/* 드롭다운 포커스 시 스타일 */
+select:focus {
+  border-color: #3b82f6; /* 파란색으로 변경 */
+  outline: none; /* 기본 테두리 제거 */
+}
+
+/* 버튼 스타일 */
+button {
+  width: 80%; /* 너비를 줄여서 중앙에 배치 */
+  max-width: 300px; /* 최대 너비 설정 */
+  padding: 8px; /* 안쪽 여백 */
+  background-color: #3b82f6; /* 파란색 배경 */
+  color: rgb(255, 255, 255); /* 흰색 텍스트 */
+  border: none; /* 테두리 제거 */
+  border-radius: 6px; /* 모서리 둥글게 */
+  font-size: 14px; /* 텍스트 크기 조정 */
+  cursor: pointer; /* 포인터 커서 */
+  transition: background-color 0.3s; /* 배경색 전환 효과 */
+}
+
+/* 버튼 호버 효과 */
+button:hover {
+  background-color: #2563eb; /* 어두운 파란색으로 변경 */
+}
+
+/* 에러 메시지 스타일 */
+p {
+  color: red; /* 빨간색 텍스트 */
+  text-align: center; /* 중앙 정렬 */
+}
+
+/* 로딩 메시지 스타일 */
+.loading {
+  font-weight: bold; /* 굵은 글씨 */
+  text-align: center; /* 중앙 정렬 */
+  color: #333; /* 진한 회색 */
+}
+
+/* 출력 컨테이너 스타일 */
+.form-output-container {
+  display: flex; /* 플렉스 박스 사용 */
+  flex-direction: column; /* 세로 방향으로 정렬 */
+  margin-top: 20px; /* 입력폼과 출력박스 간격 */
+}
+
+/* 새로운 출력 컨테이너 스타일 */
+.output-container {
+  background-color: #f9f9f9; /* 연한 회색 배경 */
+  border-radius: 8px; /* 모서리 둥글게 */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* 부드러운 그림자 효과 */
+  padding: 10px; /* 안쪽 여백 */
+}
+
+/* 결과 테이블 스타일 */
+.output-results table {
+  width: 100%; /* 테이블 너비 */
+  border-collapse: collapse; /* 테두리 겹침 방지 */
+  margin-top: 10px; /* 제목과 테이블 간격 */
+}
+
+.output-results th, .output-results td {
+  border: 1px solid #d1d5db; /* 연한 회색 테두리 */
+  padding: 8px; /* 안쪽 여백 */
+  text-align: left; /* 왼쪽 정렬 */
+}
+
+.output-results th {
+  background-color: #e0f7fa; /* 연한 파란색 배경 */
+}
+
+.selection-group {
+  display: flex; /* 플렉스 박스 사용 */
+  align-items: center; /* 수직 중앙 정렬 */
+  margin-bottom: 10px; /* 하단 여백 */
+}
+
+.selection-group label {
+  margin-right: 10px; /* 레이블과 드롭다운 간격 */
+  white-space: nowrap; /* 줄 바꿈 방지 */
+  width: 120px; /* 레이블 너비 고정 */
+}
+
+.dropdown {
+  width: 75%; /* 드롭다운 너비 설정 */
+  max-width: 500px; /* 최대 너비 설정 */
+  padding: 10px; /* 안쪽 여백 */
+  border: 1px solid #d1d5db; /* 연한 회색 테두리 */
+  border-radius: 6px; /* 모서리 둥글게 */
+  font-size: 13px; /* 텍스트 크기 조정 */
+  transition: border-color 0.3s; /* 테두리 색상 전환 효과 */
+}
+
+/* 차트 타입 옵션 스타일 */
+.chart-type-options {
+  display: flex; /* 플렉스 박스 사용 */
+  justify-content: center; /* 중앙 정렬 */
+  margin-top: 10px; /* 상단 여백 */
+}
+
+.chart-type-options label {
+  display: flex; /* 플렉스 박스 사용 */
+  align-items: center; /* 세로 중앙 정렬 */
+  margin-right: 15px; /* 간격 설정 */
+}
+
+.chart-type-options input {
+  margin-right: 10px; /* 라디오 버튼과 텍스트 간격 */
+}
+
+/* 추가: 가로 정렬을 보장 */
+.chart-type-options {
+  flex-direction: row; /* 가로 방향 정렬 */
+}

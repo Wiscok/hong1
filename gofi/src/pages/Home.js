@@ -1,11 +1,21 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 
 function Home() {
+  const homeSectionRef = useRef(null);
+
+  useEffect(() => {
+    // Home 컴포넌트가 마운트될 때 homeSectionRef로 스크롤
+    homeSectionRef.current.scrollIntoView({ behavior: 'smooth' });
+  }, []);
+
   return (
-    <section>
-      <h2>홈</h2>
-      <p>GOFI홈페이지에 오신것을 환영합니다!</p>
-    </section>
+    <div>
+      <h1>홈 페이지</h1>
+      <section ref={homeSectionRef}>
+        <p>이것은 홈 페이지의 메인 섹션입니다.</p>
+      </section>
+      <p>홈 페이지의 다른 콘텐츠...</p>
+    </div>
   );
 }
 

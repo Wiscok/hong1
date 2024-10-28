@@ -1,129 +1,249 @@
-import React, { useState } from 'react';
-import './Search.css'; 
+import React, { useState, useRef, useEffect } from 'react';
+import { Bar, Line, Pie } from 'react-chartjs-2';
+import { Chart, CategoryScale, LinearScale, BarElement, LineElement, PointElement, ArcElement, Title, Tooltip, Legend } from 'chart.js';
+import './Search.css';
+
+Chart.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, ArcElement, Title, Tooltip, Legend);
 
 function FinancialDataForm() {
-  // 사용자가 입력한 정보를 저장하는 상태 변수
-  const [corpCode, setCorpCode] = useState('');
-  const [year, setYear] = useState('');
-  const [report, setReport] = useState('');
-  const [subject, setSubject] = useState('');
-  const [fsDiv, setFsDiv] = useState(''); // fs_div (재무제표 종류) 필드 추가
+  const searchSectionRef = useRef(null);
 
-  // 조회한 데이터와 에러 메시지를 저장하는 상태 변수
-  const [mainAccountData, setMainAccountData] = useState([]);
+  useEffect(() => {
+    searchSectionRef.current.scrollIntoView({ behavior: 'smooth' });
+  }, []);
+
+  const [corpCode, setCorpCode] = useState('');
+  const [yearRange, setYearRange] = useState('');
+  const [subject, setSubject] = useState('');
+  const [report, setReport] = useState('');
+  const [fsDiv, setFsDiv] = useState('');
   const [allAccountData, setAllAccountData] = useState([]);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [dataFetched, setDataFetched] = useState(false);
+  const [chartType, setChartType] = useState('');
+  const [chartReady, setChartReady] = useState(false);
+  const [submittedSubject, setSubmittedSubject] = useState('');
 
-  // 입력값 변경 시 상태 업데이트
   const handleInputChange = (e, setter) => {
     setter(e.target.value);
   };
 
-  // 주요 계정과목 데이터를 조회하는 함수
-  const fetchMainAccountData = async () => {
-    const query = `corp_code=${corpCode}&bsns_year=${year}&reprt_code=${report}&subject=${subject}`;
-    
-    try {
-      const response = await fetch(`http://localhost:8000/open-dart/get-main-account-data/?${query}`, {
-        method: 'GET',
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setMainAccountData(data);
-        setError(null);
-      } else {
-        throw new Error('주요 계정과목 데이터를 조회하는 중 오류가 발생했습니다.');
-      }
-    } catch (error) {
-      setError(error.message);
-      setMainAccountData([]);
-    }
-  };
-
-  // 전체 계정과목 데이터를 조회하는 함수 (fs_div 포함)
   const fetchAllAccountData = async () => {
-    const query = `corp_code=${corpCode}&bsns_year=${year}&reprt_code=${report}&fs_div=${fsDiv}`;
+    setLoading(true);
+    setError(null);
+    setDataFetched(false);
+
+    const years = [];
+    if (yearRange.includes('~')) {
+      const [startYear, endYear] = yearRange.split('~').map(y => y.trim());
+      for (let year = parseInt(startYear); year <= parseInt(endYear); year++) {
+        years.push(year.toString());
+      }
+    } else {
+      years.push(...yearRange.split(',').map(y => y.trim()).filter(Boolean));
+    }
 
     try {
+      const query = `corp_code=${corpCode}&year=${years.join(',')}&reprt_code=${report}&subject=${submittedSubject}&fs_div=${fsDiv}`;
       const response = await fetch(`http://localhost:8000/open-dart/get-all-account-data/?${query}`, {
         method: 'GET',
       });
 
       if (response.ok) {
         const data = await response.json();
-        // 사용자가 입력한 계정과목으로 데이터 필터링
-        const filteredData = data.filter(item => item.account_nm === subject);
-        setAllAccountData(filteredData);
-        setError(null);
+        setAllAccountData(data);
+        setChartReady(true);
       } else {
-        throw new Error('전체 계정과목 데이터를 조회하는 중 오류가 발생했습니다.');
+        throw new Error('데이터 조회 오류');
       }
     } catch (error) {
       setError(error.message);
       setAllAccountData([]);
+    } finally {
+      setLoading(false);
+      setDataFetched(true);
     }
   };
 
-  // 폼 제출 시 두 가지 조회 함수 호출
   const handleSubmit = (e) => {
     e.preventDefault();
-    fetchMainAccountData();
+    setSubmittedSubject(subject);
     fetchAllAccountData();
+  };
+
+  const chartData = {
+    labels: allAccountData.map(item => item.bsns_year),
+    datasets: [
+      {
+        label: submittedSubject,
+        data: allAccountData.map(item => parseInt(item.thstrm_amount) / 1000000), // 백만 단위로 변환
+        backgroundColor: chartType === '도형'
+          ? allAccountData.map((_, index) => `hsl(200, 70%, ${60 - (index * 5)}%)`)
+          : 'rgba(75, 192, 192, 0.6)',
+        borderColor: chartType === '도형'
+          ? allAccountData.map((_, index) => `hsl(200, 70%, ${40 - (index * 5)}%)`)
+          : 'rgba(75, 192, 192, 1)',
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const renderChart = () => {
+    const commonOptions = {
+      scales: {
+        y: {
+          title: {
+            display: true,
+            text: '단위: 백만',
+          },
+          ticks: {
+            callback: (value) => `${value.toLocaleString()}`, // 값은 백만 단위로 표시
+          },
+        },
+      },
+    };
+
+    switch (chartType) {
+      case '막대':
+        return <Bar data={chartData} options={commonOptions} />;
+      case '선':
+        return <Line data={chartData} options={commonOptions} />;
+      case '도형':
+        return (
+          <Pie 
+            data={chartData} 
+            options={{
+              plugins: {
+                tooltip: {
+                  callbacks: {
+                    label: (tooltipItem) => `${tooltipItem.label} (${(tooltipItem.raw).toLocaleString()} 백만 원)`,
+                  },
+                },
+              },
+            }} 
+          />
+        );
+      default:
+        return (
+          <table>
+            <thead>
+              <tr>
+                <th>사업연도</th>
+                <th>{submittedSubject} (단위: 백만)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {allAccountData.map((item, index) => (
+                <tr key={index}>
+                  <td>{item.bsns_year}</td>
+                  <td>{(parseInt(item.thstrm_amount) / 1000000).toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        );
+    }
   };
 
   return (
     <div className="container">
       <h1>원하는 재무정보를 검색해보세요!</h1>
+      <section ref={searchSectionRef}></section>
       <form onSubmit={handleSubmit}>
-        <input type="text" placeholder="회사코드 입력" value={corpCode} onChange={(e) => handleInputChange(e, setCorpCode)} required />
-        <input type="text" placeholder="사업연도 입력" value={year} onChange={(e) => handleInputChange(e, setYear)} required />
-        <input type="text" placeholder="보고서 코드 입력" value={report} onChange={(e) => handleInputChange(e, setReport)} required />
-        <input type="text" placeholder="계정과목 입력" value={subject} onChange={(e) => handleInputChange(e, setSubject)} required />
-        <input type="text" placeholder="연결/개별 (개별:OFS,연결:CFS)" value={fsDiv} onChange={(e) => handleInputChange(e, setFsDiv)} required />
+        <input 
+          type="text" 
+          placeholder="회사코드 입력" 
+          value={corpCode} 
+          onChange={(e) => handleInputChange(e, setCorpCode)} 
+          required 
+        />
+        <input 
+          type="text" 
+          placeholder="사업연도 입력 (예: 2021,2022 또는 2021~2022)" 
+          value={yearRange} 
+          onChange={(e) => handleInputChange(e, setYearRange)} 
+          required 
+        />
+        <input 
+          type="text" 
+          placeholder="계정과목 입력" 
+          value={subject} 
+          onChange={(e) => handleInputChange(e, setSubject)} 
+          required 
+        />
+
+        <div className="selection-group">
+          <label htmlFor="report">보고서유형:</label>
+          <select 
+            id="report" 
+            value={report} 
+            onChange={(e) => setReport(e.target.value)} 
+            required
+            className="dropdown"
+          >
+            <option value="" disabled>선택하세요!</option>
+            <option value="11011">사업보고서</option>
+            <option value="11012">반기보고서</option>
+            <option value="11013">1분기보고서</option>
+            <option value="11014">3분기보고서</option>
+          </select>
+        </div>
+
+        <div className="selection-group">
+          <label htmlFor="fsDiv">재무제표종류:</label>
+          <select 
+            id="fsDiv" 
+            value={fsDiv} 
+            onChange={(e) => setFsDiv(e.target.value)} 
+            required
+            className="dropdown"
+          >
+            <option value="" disabled>선택하세요!</option>
+            <option value="OFS">단일재무제표</option>
+            <option value="CFS">연결재무제표</option>
+          </select>
+        </div>
+        
         <button type="submit">데이터 조회</button>
       </form>
 
-      {error && <p style={{ color: 'red' }}>Error: {error}</p>}
+      <div className="form-output-container">
+        <div className="output-container">
+          {loading && <p className="loading">데이터 출력 중입니다...</p>}
+          {error && <p style={{ color: 'red' }}>Error: {error}</p>}
+          
+          {dataFetched && allAccountData.length > 0 && (
+            <div className="output-results">
+              <h2>출력 결과:</h2>
+              <p style={{ color: 'black', fontSize: '1.2em' }}>{allAccountData[0].corp_name}</p>
 
-      {/* 주요 계정과목 데이터를 출력 */}
-      {mainAccountData.length > 0 && (
-        <div>
-          <h2>주요 계정 과목 데이터:</h2>
-          <ul>
-            {mainAccountData.map((item, index) => (
-              <li key={index}>
-                <strong>기업명:</strong> {item.corp_name} <br />
-              <strong>기업코드:</strong> {item.corp_code} <br />
-              <strong>사업연도:</strong> {item.bsns_year} <br />
-              <strong>{item.account_nm}:</strong> {item.thstrm_amount}
-              </li>
-            ))}
-          </ul>
+              {chartReady && (
+                <>
+                  {renderChart()}
+                  <div className="chart-type-options">
+                    <label className="radio-label">
+                      <input type="radio" name="chartType" value="" checked={chartType === ''} onChange={(e) => setChartType(e.target.value)} /> 표
+                    </label>
+                    <label className="radio-label">
+                      <input type="radio" name="chartType" value="막대" checked={chartType === '막대'} onChange={(e) => setChartType(e.target.value)} /> 막대
+                    </label>
+                    <label className="radio-label">
+                      <input type="radio" name="chartType" value="선" checked={chartType === '선'} onChange={(e) => setChartType(e.target.value)} /> 선
+                    </label>
+                    <label className="radio-label">
+                      <input type="radio" name="chartType" value="도형" checked={chartType === '도형'} onChange={(e) => setChartType(e.target.value)} /> 도형
+                    </label>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+          {dataFetched && allAccountData.length === 0 && !loading && !error && (
+            <p>해당 계정과목의 데이터가 존재하지 않습니다.</p>
+          )}
         </div>
-      )}
-
-      {/* 전체 계정과목 데이터를 출력 */}
-      {allAccountData.length > 0 && (
-        <div>
-          <h2>전체 계정 과목 데이터:</h2>
-          <ul>
-            {allAccountData.map((item, index) => (
-              <li key={index}>
-              <strong>기업명:</strong> {item.corp_name} <br />
-              <strong>기업코드:</strong> {item.corp_code} <br />
-              <strong>사업연도:</strong> {item.bsns_year} <br />
-              <strong>{item.account_nm}:</strong> {item.thstrm_amount}
-                {/* 금액에 쉼표추가해서 표시 */}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {mainAccountData.length === 0 && allAccountData.length === 0 && !error && (
-        <p>해당 계정과목의 데이터가 존재하지 않습니다.</p>
-      )}
+      </div>
     </div>
   );
 }
