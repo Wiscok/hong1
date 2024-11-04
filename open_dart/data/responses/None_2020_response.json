@@ -1,0 +1,4 @@
+{
+    "status": "100",
+    "message": "필수값(corp_code,bsns_year,reprt_code)이 누락되었습니다."
+}

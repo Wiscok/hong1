@@ -23,11 +23,29 @@ def load_account_mapping():
 def financial_data_form(request):
     return render(request, 'financial_data_form.html')
 
+# OpenDART API 응답을 JSON 파일로 저장하는 함수
+def save_json_response_to_file(data, corp_code, year):
+    """Save JSON data to a file with a structured filename."""
+    # 파일 저장 경로 설정
+    save_dir = os.path.join(settings.BASE_DIR, 'open_dart', 'data', 'responses')
+    os.makedirs(save_dir, exist_ok=True)  # 디렉토리 생성
+
+    # 파일 이름 설정 (회사 코드와 연도 포함)
+    file_name = f"{corp_code}_{year}_response.json"
+    file_path = os.path.join(save_dir, file_name)
+
+    # JSON 데이터 저장
+    with open(file_path, 'w', encoding='utf-8') as file:
+        json.dump(data, file, ensure_ascii=False, indent=4)
+
+    print(f"응답 JSON 파일이 저장되었습니다: {file_path}")
+
 # OpenDART API에서 데이터를 가져오는 함수
 @api_view(['GET'])
 def get_all_account_data(request):
     # 요청 파라미터 가져오기
-    corp_code = request.GET.get('corp_code')
+    # corp_code = request.GET.get('corp_code')
+    corp_name = request.GET.get('corp_name')
     year_range = request.GET.get('year')
     reprt_code = request.GET.get('reprt_code')
     fs_div = request.GET.get('fs_div')
@@ -57,6 +75,9 @@ def get_all_account_data(request):
         print(f"'{subject}'에 대한 동의어가 없어 기본값으로 검색합니다.")
 
     all_filtered_data = []
+    
+    # corp_name = get_corp_name_from_xml(corp_code)
+    corp_code = get_corp_code_from_xml(corp_name) #기업명을 입력받아 기업코드 검색
 
     for year in years:
         # API 요청
@@ -68,11 +89,18 @@ def get_all_account_data(request):
             'fs_div': fs_div,
         })
         print(f"연도: {year}, 회사 코드: {corp_code}, 응답 상태 코드: {response.status_code}")
-
+        
         if response.ok:
             data = response.json()
+            # print(data)
+            save_json_response_to_file(data, corp_code, year) #dart 응답 json 파일로 저장하는 함수
+            
             all_account_data = data.get('list', [])
-            corp_name = get_corp_name_from_xml(corp_code)
+            
+            # sample_data = all_account_data[:5] #샘플로 응답 item중 앞의 5개만 출력
+            # print(sample_data)
+            
+          
 
             # 1. 정확히 일치하는 계정명이 있는 경우 먼저 필터링
             exact_match_data = [
@@ -101,11 +129,17 @@ def get_all_account_data(request):
                 for item in all_account_data
                 if any(keyword in item.get('account_nm', '') for keyword in synonyms)
             ]
-
+            
             all_filtered_data.extend(filtered_data)
+            print(all_filtered_data)
         else:
             return Response({"error": f"년도 {year}에 대한 데이터 조회 오류"}, status=response.status_code)
 
+    print("===== Filtered Data Passed to React =====")
+    for item in all_filtered_data:
+        print(f"Year: {item['bsns_year']}, Account: {item['account_nm']}, "
+              f"Amount: {item['thstrm_amount']}, Corporation: {item['corp_name']}")
+    print("========================================")
     return Response(all_filtered_data)
 
 def get_corp_name_from_xml(corp_code):
@@ -120,3 +154,28 @@ def get_corp_name_from_xml(corp_code):
             return name
 
     return None
+def get_corp_code_from_xml(corp_name):
+    xml_file = os.path.join(settings.BASE_DIR, 'open_dart', 'data', 'CORPCODE.xml')
+    tree = ET.parse(xml_file)
+    root = tree.getroot()
+
+   # 회사 이름과 일치하는 항목을 필터링하여 리스트로 저장
+    matching_items = [
+        {
+            "corp_code": item.find('corp_code').text,   # 회사 코드 추출
+            "modify_date": item.find('modify_date').text # 수정 날짜 추출
+        }
+        for item in root.findall('list')
+        if item.find('corp_name').text == corp_name    # 회사 이름이 일치하는 경우만 선택
+    ]
+
+    # 일치하는 항목이 없는 경우 None 반환
+    if not matching_items:
+        return None  # 회사 이름과 일치하는 항목이 없는 경우
+    
+    # 'modify_date' 기준으로 내림차순 정렬하여 최신 항목이 맨 앞에 오도록 설정
+    matching_items.sort(key=lambda x: x['modify_date'], reverse=True)
+    most_recent_corp_code = matching_items[0]['corp_code']  # 최신 항목의 corp_code 선택
+    print("반환된 기업코드: ", most_recent_corp_code)
+    return most_recent_corp_code  # 최신 회사 코드를 반환
+

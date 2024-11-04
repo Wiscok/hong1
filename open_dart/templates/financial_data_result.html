@@ -1,0 +1,59 @@
+<!-- open_dart/templates/financial_data_result.html -->
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>재무 데이터 결과</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>재무 데이터 결과</h1>
+
+    {% if error_message %}
+        <p><strong>오류:</strong> {{ error_message }}</p>
+    {% endif %}
+
+    <h2>API 응답 코드: {{ status_code }}</h2>
+
+    {% if financial_data %}
+        <table>
+            <thead>
+                <tr>
+                    <th>회사 이름</th>
+                    <th>연도</th>
+                    <th>계정명</th>
+                    <th>금액</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for data in financial_data %}
+                <tr>
+                    <td>{{ data.corp_name }}</td>
+                    <td>{{ data.bsns_year }}</td>
+                    <td>{{ data.account_nm }}</td>
+                    <td>{{ data.thstrm_amount }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>조회된 데이터가 없습니다.</p>
+    {% endif %}
+</body>
+</html>
