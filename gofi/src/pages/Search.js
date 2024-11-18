@@ -8,6 +8,7 @@ Chart.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement
 
 function FinancialDataForm() {
   const searchSectionRef = useRef(null); // 스크롤을 위한 ref
+  const chartRef = useRef(null); // 차트를 참조하기 위한 ref
 
   useEffect(() => {
     // 컴포넌트가 마운트되면 특정 섹션으로 스크롤
@@ -15,8 +16,8 @@ function FinancialDataForm() {
   }, []);
 
   // 상태 관리
-  const [corpCode, setCorpCode] = useState(''); // 회사 코드
-  const [corpName, setCorpName] = useState(''); // 회사 코드
+  const [corpName, setCorpName] = useState(''); // 회사 이름
+  // const [corpCode, setCorpCode] = useState(''); // 회사 코드
   const [yearRange, setYearRange] = useState(''); // 사업 연도
   const [subject, setSubject] = useState(''); // 계정 과목
   const [report, setReport] = useState(''); // 보고서 유형
@@ -31,7 +32,7 @@ function FinancialDataForm() {
 
   // 입력값 변경 핸들러
   const handleInputChange = (e, setter) => {
-    setter(e.target.value); // 입력값을 상태로 업데이트
+    setter(e.target.value); 
   };
 
   // 데이터 Fetching 함수
@@ -117,12 +118,13 @@ function FinancialDataForm() {
     // 차트 유형에 따라 렌더링
     switch (chartType) {
       case '막대':
-        return <Bar data={chartData} options={commonOptions} />; // 막대 차트
+        return <Bar ref={chartRef} data={chartData} options={commonOptions} />; // 막대 차트
       case '선':
-        return <Line data={chartData} options={commonOptions} />; // 선 차트
+        return <Line ref={chartRef} data={chartData} options={commonOptions} />; // 선 차트
       case '원형':
         return (
           <Pie 
+            ref={chartRef}
             data={chartData} 
             options={{
               plugins: {
@@ -155,6 +157,38 @@ function FinancialDataForm() {
             </tbody>
           </table>
         );
+    }
+  };
+
+  // 전체 테이블 복사 함수
+  const copyTableToClipboard = () => {
+    const table = document.querySelector('table');
+    const range = document.createRange();
+    range.selectNode(table);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+    document.execCommand('copy');
+    alert('표가 클립보드에 복사되었습니다!');
+  };
+
+  // 차트 이미지를 복사하는 함수
+  const copyChartToClipboard = () => {
+    if (chartRef.current) {
+      const imageUrl = chartRef.current.toBase64Image();
+      const img = new Image();
+      img.src = imageUrl;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        canvas.toBlob(blob => {
+          navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+            .then(() => alert('차트 이미지가 클립보드에 복사되었습니다!'))
+            .catch(err => alert('이미지 복사에 실패했습니다.'));
+        });
+      };
     }
   };
 
@@ -222,8 +256,8 @@ function FinancialDataForm() {
 
       <div className="form-output-container">
         <div className="output-container">
-          {loading && <p className="loading">데이터 출력 중입니다...</p>} {/* 로딩 중 메시지 */}
-          {error && <p style={{ color: 'red' }}>Error: {error}</p>} {/* 에러 메시지 */}
+          {loading && <p className="loading">데이터 출력 중입니다...</p>}
+          {error && <p style={{ color: 'red' }}>Error: {error}</p>}
           
           {dataFetched && allAccountData.length > 0 && (
             <div className="output-results">
@@ -232,7 +266,7 @@ function FinancialDataForm() {
 
               {chartReady && (
                 <>
-                  {renderChart()} {/* 차트 렌더링 */}
+                  {renderChart()}
                   <div className="chart-type-options">
                     <label className="radio-label">
                       <input type="radio" name="chartType" value="" checked={chartType === ''} onChange={(e) => setChartType(e.target.value)} /> 표
@@ -247,12 +281,19 @@ function FinancialDataForm() {
                       <input type="radio" name="chartType" value="원형" checked={chartType === '원형'} onChange={(e) => setChartType(e.target.value)} /> 원형
                     </label>
                   </div>
+
+                  {/* 복사 버튼들 */}
+                  {chartType === '' ? (
+                    <button onClick={copyTableToClipboard}>표 복사</button>
+                  ) : (
+                    <button onClick={copyChartToClipboard}>차트 이미지 복사</button>
+                  )}
                 </>
               )}
             </div>
           )}
           {dataFetched && allAccountData.length === 0 && !loading && !error && (
-            <p>해당 계정과목의 데이터가 존재하지 않습니다.</p> // 데이터가 없을 때 메시지
+            <p>해당 계정과목의 데이터가 존재하지 않습니다.</p>
           )}
         </div>
       </div>
@@ -260,4 +301,4 @@ function FinancialDataForm() {
   );
 }
 
-export default FinancialDataForm; // 컴포넌트 내보내기
+export default FinancialDataForm;

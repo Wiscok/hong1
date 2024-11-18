@@ -19,10 +19,6 @@ def load_account_mapping():
     with open(MAPPING_FILE_PATH, 'r', encoding='utf-8') as file:
         return json.load(file)
 
-# 재무 데이터 요청을 위한 폼을 렌더링하는 함수
-def financial_data_form(request):
-    return render(request, 'financial_data_form.html')
-
 # OpenDART API 응답을 JSON 파일로 저장하는 함수
 def save_json_response_to_file(data, corp_code, year):
     """Save JSON data to a file with a structured filename."""
@@ -64,21 +60,23 @@ def get_all_account_data(request):
         else:
             years = [y.strip() for y in year_range.split(',') if y.strip()]
 
-    # 맵핑 사전 로드 및 해당 subject의 동의어 목록 가져오기
-    account_mapping = load_account_mapping()
-    synonyms = account_mapping.get(subject, [subject])  # 동의어가 없을 경우 입력된 subject 자체를 사용
+    # # 맵핑 사전 로드 및 해당 subject의 동의어 목록 가져오기
+    # account_mapping = load_account_mapping()
+    # synonyms = account_mapping.get(subject, [subject])  # 동의어가 없을 경우 입력된 subject 자체를 사용
 
-    # 동의어가 있는지 여부를 터미널에 출력
-    if subject in account_mapping:
-        print(f"'{subject}'에 대한 동의어 목록을 찾았습니다: {synonyms}")
-    else:
-        print(f"'{subject}'에 대한 동의어가 없어 기본값으로 검색합니다.")
+    # # 동의어가 있는지 여부를 터미널에 출력
+    # if subject in account_mapping:
+    #     print(f"'{subject}'에 대한 동의어 목록을 찾았습니다: {synonyms}")
+    # else:
+    #     print(f"'{subject}'에 대한 동의어가 없어 기본값으로 검색합니다.")
 
     all_filtered_data = []
     
     # corp_name = get_corp_name_from_xml(corp_code)
     corp_code = get_corp_code_from_xml(corp_name) #기업명을 입력받아 기업코드 검색
-
+    if not corp_code:
+        return Response({"error": "유효하지 않은 기업명."}, status=400)
+    
     for year in years:
         # API 요청
         response = requests.get(url, params={
@@ -93,32 +91,13 @@ def get_all_account_data(request):
         if response.ok:
             data = response.json()
             # print(data)
-            save_json_response_to_file(data, corp_code, year) #dart 응답 json 파일로 저장하는 함수
+            save_json_response_to_file(data, corp_name, year) #dart 응답 json 파일로 저장하는 함수
             
             all_account_data = data.get('list', [])
             
             # sample_data = all_account_data[:5] #샘플로 응답 item중 앞의 5개만 출력
             # print(sample_data)
             
-          
-
-            # 1. 정확히 일치하는 계정명이 있는 경우 먼저 필터링
-            exact_match_data = [
-                {
-                    'account_nm': item.get('account_nm'),
-                    'bsns_year': item.get('bsns_year'),
-                    'thstrm_amount': item.get('thstrm_amount'),
-                    'corp_name': corp_name
-                }
-                for item in all_account_data
-                if item.get('account_nm') == subject
-            ]
-
-            if exact_match_data:
-                all_filtered_data.extend(exact_match_data)
-                continue  # 다음 연도로 넘어감
-
-            # 2. 동의어 목록에 있는 키워드가 포함된 경우 필터링
             filtered_data = [
                 {
                     'account_nm': item.get('account_nm'),
@@ -127,7 +106,7 @@ def get_all_account_data(request):
                     'corp_name': corp_name
                 }
                 for item in all_account_data
-                if any(keyword in item.get('account_nm', '') for keyword in synonyms)
+                if item.get('account_nm') == subject
             ]
             
             all_filtered_data.extend(filtered_data)
@@ -178,4 +157,3 @@ def get_corp_code_from_xml(corp_name):
     most_recent_corp_code = matching_items[0]['corp_code']  # 최신 항목의 corp_code 선택
     print("반환된 기업코드: ", most_recent_corp_code)
     return most_recent_corp_code  # 최신 회사 코드를 반환
-

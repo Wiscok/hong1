@@ -1,5 +1,8 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+#data dir
+/dviz_proj/open_dart/data/responses
+
 # dependencies
 /node_modules
 /.pnp
