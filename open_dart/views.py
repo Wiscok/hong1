@@ -20,14 +20,14 @@ def load_account_mapping():
         return json.load(file)
 
 # OpenDART API 응답을 JSON 파일로 저장하는 함수
-def save_json_response_to_file(data, corp_code, year):
+def save_json_response_to_file(data, corp_code, year, what, spec):
     """Save JSON data to a file with a structured filename."""
     # 파일 저장 경로 설정
     save_dir = os.path.join(settings.BASE_DIR, 'open_dart', 'data', 'responses')
     os.makedirs(save_dir, exist_ok=True)  # 디렉토리 생성
 
     # 파일 이름 설정 (회사 코드와 연도 포함)
-    file_name = f"{corp_code}_{year}_response.json"
+    file_name = f"{corp_code}_{year}_{what}_{spec}.json"
     file_path = os.path.join(save_dir, file_name)
 
     # JSON 데이터 저장
@@ -86,12 +86,15 @@ def get_all_account_data(request):
             'reprt_code': reprt_code,
             'fs_div': fs_div,
         })
+            #받은패러미터 출력
+        # print(f"Received parameters - corp_name: {corp_name}, year: {year}, reprt_code: {reprt_code}, fs_div: {fs_div}")
+
         print(f"연도: {year}, 회사 코드: {corp_code}, 응답 상태 코드: {response.status_code}")
         
         if response.ok:
             data = response.json()
             # print(data)
-            save_json_response_to_file(data, corp_name, year) #dart 응답 json 파일로 저장하는 함수
+            save_json_response_to_file(data, corp_name, year, "value", reprt_code) #dart 응답 json 파일로 저장하는 함수
             
             all_account_data = data.get('list', [])
             
@@ -110,7 +113,7 @@ def get_all_account_data(request):
             ]
             
             all_filtered_data.extend(filtered_data)
-            print(all_filtered_data)
+            # print(all_filtered_data)
         else:
             return Response({"error": f"년도 {year}에 대한 데이터 조회 오류"}, status=response.status_code)
 
@@ -120,6 +123,65 @@ def get_all_account_data(request):
               f"Amount: {item['thstrm_amount']}, Corporation: {item['corp_name']}")
     print("========================================")
     return Response(all_filtered_data)
+
+# 개선할내용!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11111
+# idx_value null인 데이터들은 필터링하게끔하기. json다운시에 중복되는 정보들 제거하기.
+# OpenDART API에서 재무지표 데이터를 가져오는 함수
+@api_view(['GET'])
+def get_financial_index(request):
+    # 요청 파라미터 가져오기
+    corp_name = request.GET.get('corp_name')  # 기업명
+    bsns_year = request.GET.get('bsns_year')  # 사업 연도
+    reprt_code = request.GET.get('reprt_code')  # 보고서 코드
+    idx_cl_code = request.GET.get('idx_cl_code')  # 지표 코드
+
+    # OpenDART API 키 및 URL
+    api_key = os.getenv('API_KEY')
+    url = 'https://opendart.fss.or.kr/api/fnlttSinglIndx.json'
+    
+    #받은 패러미터 출력
+    print(f"Received parameters - corp_name: {corp_name}, year: {bsns_year}, reprt_code: {reprt_code}, fs_div: {fs_div}")
+
+
+    # 기업명으로 기업코드 가져오기
+    corp_code = get_corp_code_from_xml(corp_name)
+    if not corp_code:
+        return Response({"error": "유효하지 않은 기업명입니다."}, status=400)
+
+    # API 요청
+    response = requests.get(url, params={
+        'crtfc_key': api_key,
+        'corp_code': corp_code,
+        'bsns_year': bsns_year,
+        'reprt_code': reprt_code,
+        'idx_cl_code': idx_cl_code,
+    })
+
+    # 응답 처리
+    if response.ok:
+        data = response.json()
+        save_json_response_to_file(data, corp_name, bsns_year, "index", idx_cl_code)  # JSON 저장
+        financial_data = data.get('list', [])
+
+        # 데이터 필터링 및 반환
+        formatted_data = [
+            {
+                'corp_name': corp_name,
+                'bsns_year': item.get('bsns_year'),
+                'reprt_code': reprt_code,
+                'idx_cl_code': idx_cl_code,
+                'idx_data': item.get('data'),  # 지표 값
+            }
+            for item in financial_data
+        ]
+        print(formatted_data)
+        
+
+        return Response(formatted_data)
+    else:
+        print(f"API Error Message: {response.json().get('message')}") 
+        return Response({"error": "재무지표 데이터 조회 실패."}, status=response.status_code)
+
 
 def get_corp_name_from_xml(corp_code):
     xml_file = os.path.join(settings.BASE_DIR, 'open_dart', 'data', 'CORPCODE.xml')
@@ -133,6 +195,7 @@ def get_corp_name_from_xml(corp_code):
             return name
 
     return None
+
 def get_corp_code_from_xml(corp_name):
     xml_file = os.path.join(settings.BASE_DIR, 'open_dart', 'data', 'CORPCODE.xml')
     tree = ET.parse(xml_file)
@@ -157,3 +220,48 @@ def get_corp_code_from_xml(corp_name):
     most_recent_corp_code = matching_items[0]['corp_code']  # 최신 항목의 corp_code 선택
     print("반환된 기업코드: ", most_recent_corp_code)
     return most_recent_corp_code  # 최신 회사 코드를 반환
+
+@api_view(['GET'])
+def get_account_names(request):
+    corp_name = request.GET.get('corp_name')
+    bsns_year = request.GET.get('bsns_year')
+    reprt_code = request.GET.get('reprt_code')
+    fs_div = request.GET.get('fs_div')
+
+    api_key = os.getenv('API_KEY')
+    url = 'https://opendart.fss.or.kr/api/fnlttSinglAcntAll.json'
+
+    print(f"Received parameters - corp_name: {corp_name}, year: {bsns_year}, reprt_code: {reprt_code}, fs_div: {fs_div}")
+
+    # 기업코드 가져오기
+    corp_code = get_corp_code_from_xml(corp_name)
+    if not corp_code:
+        return Response({"error": "유효하지 않은 기업명입니다."}, status=400)
+
+    # API 요청
+    response = requests.get(url, params={
+        'crtfc_key': api_key,
+        'corp_code': corp_code,
+        'bsns_year': bsns_year,
+        'reprt_code': reprt_code,
+        'fs_div': fs_div,
+    })
+    print(f"Request URL: {response.url}")
+
+    if response.ok:
+        data = response.json()
+        account_names = [
+            item.get('account_nm') for item in data.get('list', []) if item.get('account_nm')
+        ]
+        
+        account_count = len(account_names)
+        print(f"Number of account names: {account_count}")  # 서버 로그에 출력
+
+        return Response({ 
+            "account_count": account_count,
+            "account_names": list(set(account_names))
+        })
+    else: #응답이 비정상일 경우 API의 메세지 출력
+        print(f"API Error Message: {response.json().get('message')}") 
+        return Response({"error": response.json().get('message')}, status=response.status_code)
+

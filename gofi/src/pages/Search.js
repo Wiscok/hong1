@@ -35,6 +35,26 @@ function FinancialDataForm() {
     setter(e.target.value); 
   };
 
+  const calculateLinearRegression = (data) => {
+    const n = data.length;
+    const sumX = data.reduce((acc, item) => acc + item.x, 0);  // x 값의 합
+    const sumY = data.reduce((acc, item) => acc + item.y, 0);  // y 값의 합
+    const sumXY = data.reduce((acc, item) => acc + item.x * item.y, 0);  // x * y 값의 합
+    const sumX2 = data.reduce((acc, item) => acc + item.x * item.x, 0);  // x^2 값의 합
+    
+    // 기울기 (slope)와 y 절편 (intercept) 계산
+    const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+    const intercept = (sumY - slope * sumX) / n;
+    
+    // y = mx + b 공식을 이용해 회귀선을 계산
+    const regressionLine = data.map(item => ({
+      x: item.x,
+      y: (slope * item.x + intercept)/1000000,
+    }));
+    
+    return regressionLine;
+  };
+
   // 데이터 Fetching 함수
   const fetchAllAccountData = async () => {
     setLoading(true); // 로딩 시작
@@ -96,6 +116,18 @@ function FinancialDataForm() {
           : 'rgba(75, 192, 192, 1)', // 테두리 색상
         borderWidth: 1, // 테두리 두께
       },
+      // 선형 회귀선은 원형 차트일 경우 추가하지 않음
+      ...(chartType !== '원형' ? [{
+        label: '추세선', // 선형 회귀선
+        data: calculateLinearRegression(allAccountData.map(item => ({
+          x: parseInt(item.bsns_year),
+          y: parseInt(item.thstrm_amount),
+        }))).map(item => item.y), // 회귀선 y값 (백만원 단위로 변환됨)
+        type: 'line',  // 선형 차트로 설정
+        borderColor: 'red', // 회귀선 색상
+        fill: false,  // 회귀선은 채우지 않음
+        tension: 0.1,  // 선의 곡선 정도
+      }] : []),
     ],
   };
 
@@ -114,7 +146,7 @@ function FinancialDataForm() {
         },
       },
     };
-
+  
     // 차트 유형에 따라 렌더링
     switch (chartType) {
       case '막대':

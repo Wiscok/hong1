@@ -1,0 +1,16 @@
+/* Dropdown.css */
+.selection-group {
+    margin: 10px 0;
+  }
+  
+  .selection-group label {
+    font-weight: bold;
+    margin-right: 10px;
+  }
+  
+  .dropdown {
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
