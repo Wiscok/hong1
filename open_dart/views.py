@@ -109,7 +109,7 @@ def get_all_account_data(request):
                     'corp_name': corp_name
                 }
                 for item in all_account_data
-                if item.get('account_nm') == subject
+                if item.get('account_nm') == subject #subject가 주어지지 않을경우 터미널에서 응답확인불가가
             ]
             
             all_filtered_data.extend(filtered_data)
@@ -133,6 +133,7 @@ def get_financial_index(request):
     corp_name = request.GET.get('corp_name')  # 기업명
     bsns_year = request.GET.get('bsns_year')  # 사업 연도
     reprt_code = request.GET.get('reprt_code')  # 보고서 코드
+    fs_div = request.GET.get('fs_div')
     idx_cl_code = request.GET.get('idx_cl_code')  # 지표 코드
 
     # OpenDART API 키 및 URL
@@ -265,3 +266,28 @@ def get_account_names(request):
         print(f"API Error Message: {response.json().get('message')}") 
         return Response({"error": response.json().get('message')}, status=response.status_code)
 
+def get_account_subjects(request):
+    # 사용자가 요청한 파라미터 받기
+    company_name = request.GET.get('company_name', None)
+    year = request.GET.get('year', None)
+    report_code = request.GET.get('report_code', None)
+    fs_div = request.GET.get('fs_div', None)
+    
+    # 파일에서 데이터 읽기
+    with open('path/to/account_subjects.json', 'r', encoding='utf-8') as file:
+        account_data = json.load(file)
+
+    # 데이터에서 계정 항목만 추출
+    account_subjects = account_data.get('account_subjects', [])
+
+    # 요청된 파라미터에 맞게 필터링
+    if company_name:
+        account_subjects = [subject for subject in account_subjects if company_name in subject['company_name']]
+    if year:
+        account_subjects = [subject for subject in account_subjects if year == subject['year']]
+    if report_code:
+        account_subjects = [subject for subject in account_subjects if report_code == subject['report_code']]
+    if fs_div:
+        account_subjects = [subject for subject in account_subjects if fs_div == subject['fs_div']]
+
+    return JsonResponse(account_subjects, safe=False)
