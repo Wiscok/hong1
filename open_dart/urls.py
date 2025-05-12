@@ -8,5 +8,5 @@ urlpatterns = [
     path('get-financial-index/', views.get_financial_index, name='get_financial_index'),
     path('get-account-names/', views.get_account_names, name='get_account_names'),  
     path('get-account-subjects/', views.get_account_subjects, name='get_account_subjects'),
-
+    path('get-all-account-data-forCompare/', views.get_all_account_data_forCompare, name='get_all_account_data_forCompare'),
 ]

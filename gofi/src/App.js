@@ -5,6 +5,7 @@ import './style.css';  // 추가 스타일
 import Home from './pages/Home';  // Home 컴포넌트 불러오기
 import About from './pages/About';  // About 컴포넌트 불러오기
 import Search from './pages/Search';  // Search 컴포넌트 불러오기
+import Compare from './pages/Compare';  // Compare 컴포넌트 불러오기
 import SearchPage from './pages/Test1';  // Search 컴포넌트 불러오기
 import AccountDropdown from './pages/Test2';
 
@@ -22,6 +23,7 @@ function App() {
               <li><Link to="/">홈</Link></li>
               <li><Link to="/about">소개</Link></li>
               <li><Link to="/search">재무정보검색</Link></li>
+              <li><Link to="/compare">재무정보비교</Link></li>
               <li><Link to="/test1">테스트</Link></li>   {/*호출하는 링크를 Link to=에 적어야함함*/}
             </ul>
           </nav>
@@ -32,9 +34,9 @@ function App() {
             <Route path="/" element={<Home />} />  {/* 홈 페이지 */}
             <Route path="/about" element={<About />} />  {/* 소개 페이지 */}
             <Route path="/search" element={<Search />} />  {/* 재무정보 검색 페이지 */}
+            <Route path="/compare" element={<Compare />} />  {/* 재무정보 비교교 페이지 */}
             <Route path="/test1" element={<SearchPage />} />  {/* 재무정보 검색 페이지2 */}
             <Route path="/test2" element={<AccountDropdown />} />  {/* 재무정보 검색 페이지2 */}
-
           </Routes>
         </main>
         <footer>

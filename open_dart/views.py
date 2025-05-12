@@ -124,6 +124,107 @@ def get_all_account_data(request):
     print("========================================")
     return Response(all_filtered_data)
 
+# OpenDART API에서 데이터를 가져오는 함수
+@api_view(['GET'])
+def get_all_account_data_forCompare(request):
+    # 요청 파라미터 가져오기
+    # corp_code = request.GET.get('corp_code')
+    corp_name = request.GET.get('corp_name')
+    year_range = request.GET.get('year')
+    reprt_code = request.GET.get('reprt_code')
+    fs_div = request.GET.get('fs_div')
+    subject = request.GET.get('subject')
+
+    # OpenDART API 키 및 URL
+    api_key = os.getenv('API_KEY')
+    url = 'https://opendart.fss.or.kr/api/fnlttSinglAcntAll.json'
+
+    # 연도 범위 처리
+    years = []
+    if year_range:
+        if '~' in year_range:
+            start_year, end_year = map(int, year_range.split('~'))
+            years = [str(year) for year in range(start_year, end_year + 1)]
+        else:
+            years = [y.strip() for y in year_range.split(',') if y.strip()]
+
+    # # 맵핑 사전 로드 및 해당 subject의 동의어 목록 가져오기
+    # account_mapping = load_account_mapping()
+    # synonyms = account_mapping.get(subject, [subject])  # 동의어가 없을 경우 입력된 subject 자체를 사용
+
+    # # 동의어가 있는지 여부를 터미널에 출력
+    # if subject in account_mapping:
+    #     print(f"'{subject}'에 대한 동의어 목록을 찾았습니다: {synonyms}")
+    # else:
+    #     print(f"'{subject}'에 대한 동의어가 없어 기본값으로 검색합니다.")
+
+    all_filtered_data = []
+    
+    # corp_name = get_corp_name_from_xml(corp_code)
+    corp_code = get_corp_code_from_xml(corp_name) #기업명을 입력받아 기업코드 검색
+    if not corp_code:
+        return Response({"error": "유효하지 않은 기업명."}, status=400)
+    
+    for year in years:
+        # API 요청
+        response = requests.get(url, params={
+            'crtfc_key': api_key,
+            'corp_code': corp_code,
+            'bsns_year': year,
+            'reprt_code': reprt_code,
+            'fs_div': fs_div,
+        })
+            #받은패러미터 출력
+        # print(f"Received parameters - corp_name: {corp_name}, year: {year}, reprt_code: {reprt_code}, fs_div: {fs_div}")
+
+        print(f"연도: {year}, 회사 코드: {corp_code}, 응답 상태 코드: {response.status_code}")
+        
+        if response.ok:
+            data = response.json()
+            # print(data)
+            save_json_response_to_file(data, corp_name, year, "value", reprt_code) #dart 응답 json 파일로 저장하는 함수
+            
+            all_account_data = data.get('list', [])
+            
+            # sample_data = all_account_data[:5] #샘플로 응답 item중 앞의 5개만 출력
+            # print(sample_data)
+            
+            filtered_data = [
+        {
+            'account_id': item.get('account_id'),
+            'bsns_year': item.get('bsns_year'),
+            'thstrm_amount': item.get('thstrm_amount'),
+            'corp_name': corp_name
+        }
+        for item in all_account_data
+            if (
+        # account_id에서 "_" 이후 부분이 subject_key와 정확히 일치하는지 확인
+            item.get('account_id', '').lower().split('_')[-1] == subject_key.lower()
+            ) and (
+        # subject_key가 profitloss일 때의 처리
+            (subject_key.lower() == 'profitloss' and (
+                item.get('sj_div') == 'CIS' or
+                (item.get('sj_div') == 'IS' and not any(
+                subject_key in i.get('account_id', '').lower() and i.get('sj_div') == 'CIS'
+                for i in all_account_data
+            ))
+        )) or
+        # subject_key가 profitloss가 아닌 경우는 CIS, IS 관계없이 정확히 일치하는 값들만 가져옴
+        (subject_key.lower() != 'profitloss')
+    )   
+            ]
+            
+            all_filtered_data.extend(filtered_data)
+            # print(all_filtered_data)
+        else:
+            return Response({"error": f"년도 {year}에 대한 데이터 조회 오류"}, status=response.status_code)
+
+    print("===== Filtered Data Passed to React =====")
+    for item in all_filtered_data:
+        print(f"Year: {item['bsns_year']}, Account: {item['account_nm']}, "
+              f"Amount: {item['thstrm_amount']}, Corporation: {item['corp_name']}")
+    print("========================================")
+    return Response(all_filtered_data)
 # 개선할내용!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11111
 # idx_value null인 데이터들은 필터링하게끔하기. json다운시에 중복되는 정보들 제거하기.
 # OpenDART API에서 재무지표 데이터를 가져오는 함수
@@ -141,7 +242,7 @@ def get_financial_index(request):
     url = 'https://opendart.fss.or.kr/api/fnlttSinglIndx.json'
     
     #받은 패러미터 출력
-    print(f"Received parameters - corp_name: {corp_name}, year: {bsns_year}, reprt_code: {reprt_code}, fs_div: {fs_div}")
+    print(f"Received parameters - corp_name: {corp_name}, year: {bsns_year}, reprt_code: {reprt_code}, idx_cl_code: {idx_cl_code}")
 
 
     # 기업명으로 기업코드 가져오기
@@ -161,6 +262,7 @@ def get_financial_index(request):
     # 응답 처리
     if response.ok:
         data = response.json()
+        print(data)
         save_json_response_to_file(data, corp_name, bsns_year, "index", idx_cl_code)  # JSON 저장
         financial_data = data.get('list', [])
 
@@ -169,13 +271,14 @@ def get_financial_index(request):
             {
                 'corp_name': corp_name,
                 'bsns_year': item.get('bsns_year'),
-                'reprt_code': reprt_code,
+                # 'reprt_code': reprt_code,
                 'idx_cl_code': idx_cl_code,
-                'idx_data': item.get('data'),  # 지표 값
+                'idx_nm': idx_nm,
+                'idx_data': item.get('idx_val'),  # 지표 값
             }
             for item in financial_data
         ]
-        print(formatted_data)
+        # print(formatted_data)
         
 
         return Response(formatted_data)
