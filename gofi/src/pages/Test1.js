@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { Line } from 'react-chartjs-2';
 import './Compare.css';
+import AccountDropdown from './AccountDropdown';
 
 const SearchPage = () => {
     const [inputCorpName, setInputCorpName] = useState('');
@@ -11,7 +12,7 @@ const SearchPage = () => {
     const [inputFsDiv, setInputFsDiv] = useState('');
 
     const [corpName, setCorpName] = useState('');
-    const [yearsInput, setYearsInput] = useState('');
+    const [years, setYears] = useState([]);
     const [reportCode, setReportCode] = useState('');
     const [fsDiv, setFsDiv] = useState('');
 
@@ -19,52 +20,28 @@ const SearchPage = () => {
     const [searchResults, setSearchResults] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [availableAccounts, setAvailableAccounts] = useState({});
+    const [loadAccountsTrigger, setLoadAccountsTrigger] = useState(false);
 
-    const years = inputYearsInput.split(/[\s,~,]+/).filter(Boolean);
-
-    const fetchAccountsByYear = async (year) => {
-        try {
-            const response = await axios.get('http://localhost:8000/open-dart/get-account-names/', {
-                params: {
-                    corp_name: inputCorpName,
-                    bsns_year: year,
-                    reprt_code: inputReportCode,
-                    fs_div: inputFsDiv
-                }
-            });
-            console.log(`${year}년 계정 목록 API 응답:`, response.data);
-            return { [year]: response.data };
-        } catch (error) {
-            console.error(`${year}년 계정과목 불러오기 실패:`, error);
-            return { [year]: [] };
-        }
+    const handleLoadAccountsButtonClick = () => {
+        setCorpName(inputCorpName);
+        setYears(inputYearsInput.split(/[\s,~,]+/).filter(Boolean));
+        setReportCode(inputReportCode);
+        setFsDiv(inputFsDiv);
+        setLoadAccountsTrigger(true);
     };
 
-    const handleLoadAccountsButtonClick = async () => {
-        console.log('계정명 찾기 버튼 클릭!');
-        if (inputCorpName && years.length > 0 && inputReportCode && inputFsDiv) {
-            setAvailableAccounts({});
-            setCorpName(inputCorpName);
-            setYearsInput(inputYearsInput);
-            setReportCode(inputReportCode);
-            setFsDiv(inputFsDiv);
-            console.log('요청 파라미터:', { inputCorpName, years, inputReportCode, inputFsDiv });
-            const accountsByYear = await Promise.all(years.map(fetchAccountsByYear));
-            const newAvailableAccounts = {};
-            accountsByYear.forEach(item => {
-                const year = Object.keys(item)[0];
-                newAvailableAccounts[year] = Object.values(item)[0];
-            });
-            setAvailableAccounts(newAvailableAccounts);
-            console.log('availableAccounts 상태 업데이트:', newAvailableAccounts);
-        } else {
-            alert('기업명, 연도, 보고서코드, 재무제표구분을 모두 입력해주세요.');
-        }
+    const handleAccountChange = (year, account) => {
+        setSelectedAccounts(prev => ({ ...prev, [year]: account }));
+        console.log(`연도 ${year}의 선택된 계정:`, account);
+    };
+
+    const handleInputChange = (setter) => (e) => {
+        setter(e.target.value);
     };
 
     const handleSearchButtonClick = async () => {
         console.log('검색 버튼 클릭!');
+        console.log('선택된 계정과목:', selectedAccounts);
         if (!corpName || years.length === 0 || Object.keys(selectedAccounts).length !== years.length) {
             alert('기업명, 연도, 계정과목을 모두 선택해주세요.');
             return;
@@ -73,10 +50,17 @@ const SearchPage = () => {
         setLoading(true);
         setError('');
         const allRequests = years.map(year => {
+            console.log(`[${year}] 요청 파라미터:`, {
+                corp_name: corpName,
+                year: year,
+                reprt_code: reportCode,
+                fs_div: fsDiv,
+                subject: selectedAccounts[year]
+            });
             return axios.get('http://localhost:8000/open-dart/get-all-account-data/', {
                 params: {
                     corp_name: corpName,
-                    bsns_year: year,
+                    year: year,
                     reprt_code: reportCode,
                     fs_div: fsDiv,
                     subject: selectedAccounts[year]
@@ -96,15 +80,6 @@ const SearchPage = () => {
                 setError('데이터를 불러오는데 실패했습니다.');
                 setLoading(false);
             });
-    };
-
-    const handleAccountChange = (year, account) => {
-        setSelectedAccounts(prev => ({ ...prev, [year]: account }));
-        console.log(`연도 ${year}의 선택된 계정:`, account);
-    };
-
-    const handleInputChange = (setter) => (e) => {
-        setter(e.target.value);
     };
 
     const chartData = {
@@ -178,20 +153,14 @@ const SearchPage = () => {
             {years.map(year => (
                 <div key={year} className="selection-group">
                     <label>{year}년 계정과목:</label>
-                    <select
-                        value={selectedAccounts[year] || ''}
-                        onChange={(e) => handleAccountChange(year, e.target.value)}
-                        disabled={!availableAccounts[year]}
-                    >
-                        <option value="">선택하세요!</option>
-                        {Array.isArray(availableAccounts[year]) ? (
-                            availableAccounts[year]?.map(account => (
-                                <option key={account} value={account}>{account}</option>
-                            ))
-                        ) : (
-                            <option value="" disabled>계정명 찾기 버튼을 눌러주세요</option>
-                        )}
-                    </select>
+                    <AccountDropdown
+                        corpName={corpName}
+                        year={year}
+                        reportCode={reportCode}
+                        fsDiv={fsDiv}
+                        onAccountChange={(account) => handleAccountChange(year, account)}
+                        loadTrigger={loadAccountsTrigger}
+                    />
                 </div>
             ))}
 

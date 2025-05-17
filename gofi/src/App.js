@@ -7,7 +7,7 @@ import About from './pages/About';  // About 컴포넌트 불러오기
 import Search from './pages/Search';  // Search 컴포넌트 불러오기
 import Compare from './pages/Compare';  // Compare 컴포넌트 불러오기
 import SearchPage from './pages/Test1';  // Search 컴포넌트 불러오기
-import AccountDropdown from './pages/Test2';
+// import AccountDropdown from './pages/Test2';
 
 
 function App() {
@@ -35,8 +35,8 @@ function App() {
             <Route path="/about" element={<About />} />  {/* 소개 페이지 */}
             <Route path="/search" element={<Search />} />  {/* 재무정보 검색 페이지 */}
             <Route path="/compare" element={<Compare />} />  {/* 재무정보 비교교 페이지 */}
-            <Route path="/test1" element={<SearchPage />} />  {/* 재무정보 검색 페이지2 */}
-            <Route path="/test2" element={<AccountDropdown />} />  {/* 재무정보 검색 페이지2 */}
+            <Route path="/test1" element={<SearchPage />} />  재무정보 검색 페이지2 */}
+            {/* <Route path="/test2" element={<AccountDropdown />} />  {/* 재무정보 검색 페이지2 */}
           </Routes>
         </main>
         <footer>

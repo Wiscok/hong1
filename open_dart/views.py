@@ -104,6 +104,7 @@ def get_all_account_data(request):
             filtered_data = [
                 {
                     'account_nm': item.get('account_nm'),
+                    'account_id': item.get('account_id'),
                     'bsns_year': item.get('bsns_year'),
                     'thstrm_amount': item.get('thstrm_amount'),
                     'corp_name': corp_name
