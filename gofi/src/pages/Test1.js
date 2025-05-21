@@ -4,9 +4,18 @@ import axios from 'axios';
 import { Line } from 'react-chartjs-2';
 import './Compare.css';
 import AccountDropdown from './AccountDropdown';
+import CorpSearch from './CorpSearch';
+
+function getRandomColor() {
+    const letters = '0123456789ABCDEF';
+    let color = '#';
+    for (let i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+}
 
 const SearchPage = () => {
-    const [inputCorpName, setInputCorpName] = useState('');
     const [inputYearsInput, setInputYearsInput] = useState('');
     const [inputReportCode, setInputReportCode] = useState('');
     const [inputFsDiv, setInputFsDiv] = useState('');
@@ -23,7 +32,6 @@ const SearchPage = () => {
     const [loadAccountsTrigger, setLoadAccountsTrigger] = useState(false);
 
     const handleLoadAccountsButtonClick = () => {
-        setCorpName(inputCorpName);
         setYears(inputYearsInput.split(/[\s,~,]+/).filter(Boolean));
         setReportCode(inputReportCode);
         setFsDiv(inputFsDiv);
@@ -84,27 +92,37 @@ const SearchPage = () => {
 
     const chartData = {
         labels: years,
-        datasets: Object.keys(selectedAccounts).map(year => {
-            const accountData = searchResults
-                .filter(item => item.bsns_year === year && item.account_nm === selectedAccounts[year])
-                .map(item => parseInt(item.thstrm_amount));
+        datasets: Object.entries(selectedAccounts).map(([year, account]) => {
+            const dataPoint = searchResults.find(
+                item => item.bsns_year === year && item.account_nm === account
+            );
+            const amount = dataPoint ? parseInt(dataPoint.thstrm_amount) / 1000000 : null;
+            const color = getRandomColor();
             return {
-                label: `${selectedAccounts[year]} (${year})`,
-                data: accountData.length > 0 ? accountData : [],
-                fill: false,
-                borderColor: getRandomColor(),
-                tension: 0.1
+                label: `${account} (${year})`,
+                data: years.map(y => (y === year ? amount : null)),
+                backgroundColor: years.map(y => (y === year ? color : 'transparent')),
+                borderColor: years.map(y => (y === year ? color : 'transparent')),
+                borderWidth: 1,
+                type: 'bar',
             };
-        })
+        }),
     };
 
     const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
         scales: {
             y: {
                 beginAtZero: true,
                 title: {
                     display: true,
-                    text: '금액 (원)'
+                    text: '금액 (백만원)'
+                },
+                ticks: {
+                    callback: function(value) {
+                        return value !== null ? value.toLocaleString('ko-KR') : '';
+                    }
                 }
             },
             x: {
@@ -122,29 +140,44 @@ const SearchPage = () => {
             },
             legend: {
                 display: true,
-                position: 'bottom'
+                position: 'bottom',
+                labels: {
+                    usePointStyle: false,
+                    generateLabels: (chart) => {
+                        const data = chart.data;
+                        return data.datasets.flatMap((dataset, i) => {
+                            return dataset.data.map((value, index) => {
+                                if (value !== null) {
+                                    return {
+                                        text: `${dataset.label}`,
+                                        fillStyle: dataset.backgroundColor[index],
+                                        strokeStyle: dataset.borderColor[index],
+                                        lineWidth: dataset.borderWidth,
+                                        hidden: !chart.isDatasetVisible(i),
+                                        index: i,
+                                        datasetIndex: i,
+                                        dataIndex: index,
+                                        pointStyle: 'circle'
+                                    };
+                                }
+                                return null;
+                            }).filter(Boolean);
+                        });
+                    }
+                }
             }
         }
     };
 
-    function getRandomColor() {
-        const letters = '0123456789ABCDEF';
-        let color = '#';
-        for (let i = 0; i < 6; i++) {
-            color += letters[Math.floor(Math.random() * 16)];
-        }
-        return color;
-    }
-
     return (
         <div className="container">
-            <h2>재무 정보 검색 (for expert)</h2>
+            <h2>재무 정보 검색 (for experts)</h2>
+            <CorpSearch onSelectCorp={(selectedName) => setCorpName(selectedName)} />
             <input
                 placeholder="연도 (예: 2022, 2023, 2024)"
                 value={inputYearsInput}
                 onChange={handleInputChange(setInputYearsInput)}
             />
-            <input placeholder="기업명" value={inputCorpName} onChange={handleInputChange(setInputCorpName)} />
             <input placeholder="보고서코드" value={inputReportCode} onChange={handleInputChange(setInputReportCode)} />
             <input placeholder="재무제표구분" value={inputFsDiv} onChange={handleInputChange(setInputFsDiv)} />
 
@@ -164,7 +197,7 @@ const SearchPage = () => {
                 </div>
             ))}
 
-            <button className="button" onClick={handleSearchButtonClick} disabled={years.length === 0 || Object.keys(selectedAccounts).length !== years.length}>
+            <button className="button" onClick={handleSearchButtonClick} disabled={years.length === 0 || Object.keys(selectedAccounts).length !== years.length || !corpName}>
                 검색
             </button>
 
@@ -193,27 +226,32 @@ const SearchPage = () => {
                                 <tr>
                                     <th>연도</th>
                                     {years.map(year => (
-                                        <th key={year}>{selectedAccounts[year] || '미선택'}</th>
+                                        <th key={year}>{year}년 {selectedAccounts[year] || '미선택'}</th>
                                     ))}
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td>금액</td>
+                                    <td>금액 (백만원)</td>
                                     {years.map(year => {
                                         const dataPoint = searchResults.find(
                                             item => item.bsns_year === year && item.account_nm === selectedAccounts[year]
                                         );
-                                        return <td key={year}>{dataPoint ? dataPoint.thstrm_amount : '-'}</td>;
+                                        const amount = dataPoint ? parseInt(dataPoint.thstrm_amount) / 1000000 : null;
+                                        const formattedAmount = amount !== null ? amount.toLocaleString('ko-KR') : '-';
+                                        return <td key={year}>{formattedAmount}</td>;
                                     })}
                                 </tr>
                             </tbody>
                         </table>
                     </div>
 
-                    <div className="output-container" style={{ marginTop: '20px' }}>
+                    <div className="output-container" style={{ marginTop: '20px', width: '450px', height: '450px' }}>
                         <h3>계정별 추이 그래프</h3>
-                        <Line data={chartData} options={chartOptions} />
+                        <Line
+                            data={chartData}
+                            options={chartOptions}
+                        />
                         <button className="button" onClick={() => {
                             const chartCanvas = document.querySelector('.output-container canvas');
                             if (chartCanvas) {

@@ -1,0 +1,52 @@
+/* CorpSearch.css */
+.corp-search-container {
+    position: relative;
+    margin-bottom: 15px;
+}
+
+.corp-search-container label {
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.corp-search-input {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 250px;
+    font-size: 1em; /* 계정명 드롭다운과 유사한 글씨 크기 */
+}
+
+.corp-search-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0; /* 왼쪽 정렬 유지 */
+    width: 100%;
+    background-color: white;
+    border: 1px solid #ccc;
+    border-top: none;
+    border-radius: 0 0 4px 4px;
+    z-index: 10;
+    max-height: 150px;
+    overflow-y: auto;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    min-width: 250px; /* 최소 너비 설정으로 왼쪽 치우침 방지 */
+}
+
+.corp-search-dropdown .corp-result-item {
+    padding: 5px; /* 계정명 드롭다운과 유사한 패딩 */
+    cursor: pointer;
+    font-size: 1em; /* 계정명 드롭다운과 유사한 글씨 크기 */
+}
+
+.corp-search-dropdown .corp-result-item:hover {
+    background-color: #f0f0f0;
+}
+
+.error-text {
+    color: red;
+    font-size: 0.9em;
+    margin-top: 5px;
+}

@@ -18,7 +18,7 @@ export const useFinancialData = () => {
   
 
   // 데이터 Fetching 함수
-  const fetchAllAccountData = async (subjectOverride = null) => {
+  const fetchAllAccountData = async (apiEndpoint, subjectOverride = null) => {
     const usedSubject = subjectOverride || subject; // submittedSubject 대신 현재 subject 사용
 
     setLoading(true);
@@ -37,7 +37,7 @@ export const useFinancialData = () => {
 
     try {
       const query = `corp_name=${corpName}&year=${years.join(',')}&reprt_code=${report}&subject=${usedSubject}&fs_div=${fsDiv}`;
-      const response = await fetch(`http://localhost:8000/open-dart/get-all-account-data/?${query}`);
+      const response = await fetch(`${apiEndpoint}?${query}`);
 
       if (response.ok) {
         const data = await response.json();

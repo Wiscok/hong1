@@ -22,9 +22,9 @@ function App() {
               {/* 페이지 간 이동을 위한 링크 설정 */}
               <li><Link to="/">홈</Link></li>
               <li><Link to="/about">소개</Link></li>
-              <li><Link to="/search">재무정보검색</Link></li>
+              {/* <li><Link to="/search">재무정보검색</Link></li> */}
               <li><Link to="/compare">재무정보비교</Link></li>
-              <li><Link to="/test1">테스트</Link></li>   {/*호출하는 링크를 Link to=에 적어야함함*/}
+              <li><Link to="/searchForExpert">재무정보검색 (전문가용)</Link></li>   {/*호출하는 링크를 Link to=에 적어야함함*/}
             </ul>
           </nav>
         </header>
@@ -35,12 +35,12 @@ function App() {
             <Route path="/about" element={<About />} />  {/* 소개 페이지 */}
             <Route path="/search" element={<Search />} />  {/* 재무정보 검색 페이지 */}
             <Route path="/compare" element={<Compare />} />  {/* 재무정보 비교교 페이지 */}
-            <Route path="/test1" element={<SearchPage />} />  재무정보 검색 페이지2 */}
+            <Route path="/searchForExpert" element={<SearchPage />} />  {/*재무정보 검색 페이지2 */}
             {/* <Route path="/test2" element={<AccountDropdown />} />  {/* 재무정보 검색 페이지2 */}
           </Routes>
         </main>
         <footer>
-          <p>© 2024 GOFI</p>  {/* 푸터에 표시되는 내용 */}
+          <p>© 2025 GOFI</p>  {/* 푸터에 표시되는 내용 */}
         </footer>
       </div>
     </Router>

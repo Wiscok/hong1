@@ -6,7 +6,7 @@ import './Compare.css';
 import ChartComponent from './Search/ChartComponent.js'; // ChartComponent default import
 
 // 각 출력 결과를 렌더링하는 React 함수 컴포넌트
-function OutputRenderer({ companyData, onDelete, index}) {
+function OutputRenderer({ companyData, onDelete, index}) {e
   const [localChartType, setLocalChartType] = useState('');
   const localChartRef = useRef(null);
   const { calculateLinearRegression, copyTableToClipboard, copyChartToClipboard } = ChartComponent();
