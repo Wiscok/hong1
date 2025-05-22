@@ -148,7 +148,6 @@ def get_all_account_data_forCompare(request):
             years = [str(year) for year in range(start_year, end_year + 1)]
         else:
             years = [y.strip() for y in year_range.split(',') if y.strip()]
-
     # # 맵핑 사전 로드 및 해당 subject의 동의어 목록 가져오기
     # account_mapping = load_account_mapping()
     # synonyms = account_mapping.get(subject, [subject])  # 동의어가 없을 경우 입력된 subject 자체를 사용
@@ -189,7 +188,9 @@ def get_all_account_data_forCompare(request):
             
             # sample_data = all_account_data[:5] #샘플로 응답 item중 앞의 5개만 출력
             # print(sample_data)
-            
+            subject_key = subject.lstrip('_').lower()
+
+
             filtered_data = [
         {
             'account_id': item.get('account_id'),
@@ -222,7 +223,7 @@ def get_all_account_data_forCompare(request):
 
     print("===== Filtered Data Passed to React =====")
     for item in all_filtered_data:
-        print(f"Year: {item['bsns_year']}, Account: {item['account_nm']}, "
+        print(f"Year: {item['bsns_year']}, Account: {item['account_id']}, "
               f"Amount: {item['thstrm_amount']}, Corporation: {item['corp_name']}")
     print("========================================")
     return Response(all_filtered_data)

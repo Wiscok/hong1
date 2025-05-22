@@ -2,9 +2,11 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { Line } from 'react-chartjs-2';
-import './Compare.css';
+import './Test1.css';
 import AccountDropdown from './AccountDropdown';
-import CorpSearch from './CorpSearch';
+import CorpSearch from './CorpSearch2';
+import  './Search/useFinancialData2.js';
+import  './Search/ChartComponent2.js';
 
 function getRandomColor() {
     const letters = '0123456789ABCDEF';

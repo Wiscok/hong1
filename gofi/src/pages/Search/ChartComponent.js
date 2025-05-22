@@ -32,53 +32,77 @@ export const ChartComponent = () => {
 
     // 차트 이미지를 복사하는 함수
     const copyChartToClipboard = (chartRef) => {
-        // chartRef가 정상적으로 참조되고 있는지 확인
-        if (chartRef?.current) {
-            // 차트 이미지를 base64로 변환
-            const imageUrl = chartRef.current.toBase64Image();
-    
-            // Image 객체로 변환하여 클립보드에 복사할 수 있도록 준비
-            const img = new Image();    
-            img.src = imageUrl;
-    
-            img.onload = () => {
-                // Canvas 생성
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-    
-                // 이미지 크기에 맞게 캔버스 크기 설정
-                canvas.width = img.width;
-                canvas.height = img.height;
-    
-                // 캔버스에 이미지를 그리기
-                ctx.drawImage(img, 0, 0);
-    
-                // 이미지를 Blob으로 변환하고 클립보드에 복사
-                canvas.toBlob(blob => {
-                    if (blob) {
-                        // 클립보드에 이미지 복사
-                        navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
-                            .then(() => {
-                                alert('차트 이미지가 클립보드에 복사되었습니다!');
-                            })
-                            .catch((err) => {
-                                console.error('이미지 복사 실패', err);
-                                alert('이미지 복사에 실패했습니다.');
-                            });
-                    } else {
-                        alert('이미지를 Blob으로 변환하는 데 실패했습니다.');
-                    }
-                }, 'image/png');
-            };
-            
-            // 이미지 로드 실패 시 처리
-            img.onerror = () => {
-                alert('이미지 로드에 실패했습니다.');
-            };
+  if (!chartRef?.current) {
+    alert('차트를 찾을 수 없습니다.');
+    return;
+  }
+
+  try {
+    let canvas;
+
+    // 1. Chart.js 인스턴스인지 확인
+    if (typeof chartRef.current.toBase64Image === 'function') {
+      // ✅ Chart.js 인스턴스
+      const imageUrl = chartRef.current.toBase64Image();
+      const img = new Image();
+      img.src = imageUrl;
+
+      img.onload = () => {
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = img.width;
+        tempCanvas.height = img.height;
+        const ctx = tempCanvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+
+        tempCanvas.toBlob((blob) => {
+          if (blob) {
+            navigator.clipboard.write([
+              new ClipboardItem({ 'image/png': blob }),
+            ])
+              .then(() => alert('차트 이미지가 클립보드에 복사되었습니다!'))
+              .catch((err) => {
+                console.error('이미지 복사 실패', err);
+                alert('이미지 복사에 실패했습니다.');
+              });
+          } else {
+            alert('이미지를 Blob으로 변환하는 데 실패했습니다.');
+          }
+        });
+      };
+
+      img.onerror = () => {
+        alert('이미지를 불러오는 데 실패했습니다.');
+      };
+
+    } else {
+      // ❌ Chart.js 인스턴스가 아니면, DOM에서 canvas를 직접 탐색
+      canvas = chartRef.current.querySelector('canvas');
+      if (!canvas) {
+        alert('캔버스를 찾을 수 없습니다.');
+        return;
+      }
+
+      canvas.toBlob((blob) => {
+        if (blob) {
+          navigator.clipboard.write([
+            new ClipboardItem({ 'image/png': blob }),
+          ])
+            .then(() => alert('차트 이미지가 클립보드에 복사되었습니다!'))
+            .catch((err) => {
+              console.error('이미지 복사 실패', err);
+              alert('이미지 복사에 실패했습니다.');
+            });
         } else {
-            alert('차트를 찾을 수 없습니다.');
+          alert('이미지를 Blob으로 변환하는 데 실패했습니다.');
         }
-    };
+      }, 'image/png');
+    }
+
+  } catch (error) {
+    console.error('복사 처리 중 오류 발생:', error);
+    alert('차트 복사 중 오류가 발생했습니다.');
+  }
+};
 
     return {
         calculateLinearRegression,

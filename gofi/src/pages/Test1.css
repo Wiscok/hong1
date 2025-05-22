@@ -26,7 +26,8 @@
     border-radius: 6px; /* 모서리 둥글게 */
     font-size: 14px; /* 텍스트 크기 조정 */
     transition: border-color 0.3s; /* 테두리 색상 전환 효과 */
-}
+  }
+  
   /* 포커스 시 스타일 */
   input:focus, select:focus {
     border-color: #3b82f6; /* 파란색으로 변경 */
@@ -40,12 +41,12 @@
     border: none; /* 테두리 제거 */
     cursor: pointer; /* 포인터 커서 */
     transition: background-color 0.3s; /* 배경색 전환 효과 */
-}
+  }
   
-  
-button:hover {
+  /* 버튼 호버 효과 */
+  button:hover {
     background-color: #2563eb; /* 어두운 파란색으로 변경 */
-}
+  }
   
   /* 에러 및 로딩 메시지 스타일 */
   p {
@@ -65,163 +66,16 @@ button:hover {
   }
   
   .output-container {
-  width: 40%;            /* 기본 너비 설정 */
-  min-width: 330px;
-  max-width: 660px;
-  padding: 24px;
-  background-color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  position: relative;
-  /* 기타 기본 스타일 */
-}
-  /* 비교모드 스타일 */
-.output-container.compare-mode {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center; /* 중앙 정렬 핵심 */
-  align-items: flex-start;
-  width: 100%;
-  max-width: 1200px;
-  margin: 20px auto;
-  gap: 20px;
-}
-.compare-mode .output-results {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  margin-top: 20px;
-  padding: 10px;
-}
-.compare-mode .output-results table {
-  width: 100%;
-  max-width: 100%; /* 테이블이 너무 넓어지지 않도록 */
-  border-collapse: collapse;
-  margin-top: 20px; /* 상단 여백 */
-}
-
-.compare-mode .output-results th, .compare-mode .output-results td {
-  border: 1px solid #d1d5db;
-  padding: 8px;
-  text-align: left;
-}
-.compare-mode .output-results th {
-  background-color: #e0f7fa;
-}
-@media (max-width: 768px) {
-  .output-container.compare-mode {
-    flex-direction: column; /* 세로 방향으로 배치 */
-    align-items: center; /* 가운데 정렬 */
+    width: 35%;
+    min-width: 300px;
+    max-width: 600px;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    position: relative;
   }
-
-  .compare-mode .company-data {
-    flex: 1 1 100%; /* 작은 화면에서 100% 너비 */
-    margin-bottom: 20px;
-    max-width: 100%; /* 최대 너비 100% */
-  }
-}
-.compare-mode .compare-output {
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  margin-top: 20px;
-}
-.compare-mode .company-data {
-  flex: 0 1 360px; /* 박스 너비를 유연하게 조절하면서 중앙 정렬 */
-  max-width: 100%;
-  min-width: 330px;
-  margin-bottom: 20px;
-  box-sizing: border-box;
-}
-.output-results {
-  max-width: 100%;
-  overflow-x: auto;
-}
-.pie-chart-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  justify-content: space-between;
-}
-.pie-chart-item {
-  width: 45%;
-  min-width: 300px; /* 최소 크기 지정 */
-  box-sizing: border-box;
-  padding: 1em;
-  text-align: center;
-}
-
-.pie-chart-item canvas {
-  width: 100% !important;
-  height: auto !important;
-  max-width: 600px; /* 원하는 최대 크기 */
-  margin: 0 auto;
-}
-.compare-output th, .compare-output td {
-  padding: 8px;
-  border: 1px solid #ddd;
-  text-align: center;
-}
-.compare-output .table-container {
-  display: flex;
-  flex-wrap: wrap; /* 여러 줄로 배치 */
-  gap: 20px; /* 표 간격 */
-}
-
-.compare-output .table-wrapper {
-  width: calc(50% - 10px); /* 한 줄에 두 개씩 배치, 간격을 고려 */
-  margin-bottom: 20px;
-}
-
-
-.compare-output {
-  display: flex;
-  flex-wrap: wrap;            /* 여러 줄 가능 */
-  justify-content: center;    /* 가운데 정렬 */
-  gap: 20px;                  /* 간격 */
-  width: 100%;
-  margin-top: 20px;
-}
-
-.company-data {
-  flex: 0 1 360px;            /* 한 줄에 적당한 크기로 배치 */
-  max-width: 100%;
-  min-width: 330px;
-  margin-bottom: 20px;
-  box-sizing: border-box;
-}
-
-.compare-mode .chart-container {
-  width: 100% !important;
-  height: 400px;
-  margin-top: 20px;
-}
-
-.compare-mode .chart-container canvas {
-  max-width: 100% !important; /* canvas 크기도 100%로 조정 */
-  height: auto !important;
-}
-.compare-mode .chart-type-options {
-  display: flex;
-  justify-content: space-around;
-  width: 100%;
-}
-.compare-mode .chart-type-options button {
-  background-color: #3b82f6;
-  color: #fff;
-  border: none;
-  cursor: pointer;
-  padding: 8px 15px;
-  font-size: 14px;
-  border-radius: 5px;
-}
-
-.compare-mode .chart-type-options button:hover {
-  background-color: #2563eb;
-} 
-
+  
   /* 결과 테이블 스타일 */
   .output-results table {
     width: 100%; /* 테이블 너비 */
@@ -292,17 +146,16 @@ button:hover {
     background-color: #f0f0f0;
   }
   
- .buttonofName {
+  .buttonofName {
     background-color: #3b82f6; /* 파란색 배경 */
     color: #ffffff; /* 흰색 텍스트 */
     border: none; /* 테두리 제거 */
     cursor: pointer; /* 포인터 커서 */
     transition: background-color 0.3s; /* 배경색 전환 효과 */
-}
-
-.buttonofName:hover {
+  }
+  .buttonofName:hover {
     background-color: #2563eb; /* 어두운 파란색으로 변경 */
-}
+  }
   
   .loading-overlay {
     position: fixed;
@@ -315,21 +168,6 @@ button:hover {
     display: flex;
     justify-content: center;
     align-items: center;
-  }
-    .compare-checkbox-container {
-    display: flex;
-    justify-content: center; /* 가로 중앙 정렬 */
-    align-items: center; /* 세로 중앙 정렬 */
-    width: 100%;
-    margin-top: 10px;
-    white-space: nowrap;
-  }
-
-  .compare-checkbox-container label {
-    display: flex;
-    align-items: center; /* 체크박스와 텍스트를 수평으로 정렬 */
-    gap: 5px; /* 체크박스와 텍스트 간격을 적당히 띄움 */
-    font-size: 1rem; /* 폰트 크기 설정 */
   }
   
   
@@ -367,12 +205,6 @@ button:hover {
     margin-bottom: 20px;
     flex-wrap: wrap;
   }
-
-    .compare-mode-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 1rem;
-}
   
   .row-top {
     align-self: flex-start;
