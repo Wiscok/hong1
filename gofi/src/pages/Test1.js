@@ -4,7 +4,7 @@ import axios from 'axios';
 import { Line } from 'react-chartjs-2';
 import './Test1.css';
 import AccountDropdown from './AccountDropdown';
-import CorpSearch from './CorpSearch2';
+import CorpSearch from './CorpSearch2.js';
 import  './Search/useFinancialData2.js';
 import  './Search/ChartComponent2.js';
 
